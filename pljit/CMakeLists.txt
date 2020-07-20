@@ -1,6 +1,6 @@
 set(PLJIT_SOURCES
         main.cpp
-        SourceCodeManager.cpp SourceCodeManager.h Lexer.cpp Lexer.h Token.cpp Token.h Pljit.cpp Pljit.h PNode.cpp PNode.h)
+        SourceCodeManager.cpp SourceCodeManager.h Lexer.cpp Lexer.h Token.cpp Token.h Pljit.cpp Pljit.h TreeNode.cpp TreeNode.h Parser.cpp Parser.h ParseTreeVisitor.h ParsePrintVisitor.cpp ParsePrintVisitor.h)
 
 add_library(pljit_core ${PLJIT_SOURCES})
 target_include_directories(pljit_core PUBLIC ${CMAKE_SOURCE_DIR})

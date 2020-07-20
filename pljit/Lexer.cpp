@@ -2,15 +2,16 @@
 
 using namespace std;
 
+namespace jit {
+
 std::unique_ptr<Token> Lexer::nextToken() {
 
     // move lexer position to the beginning of the next token (i.e. skip all whitespaces)
-    while(isspace(*currAbsPos)) {
+    while (isspace(*currAbsPos)) {
         if (*currAbsPos == '\n') {
-            currPos = 0;
+            currPos = 1;
             ++currLine;
-        }
-        else
+        } else
             ++currPos;
 
         ++currAbsPos;
@@ -24,13 +25,17 @@ std::unique_ptr<Token> Lexer::nextToken() {
 
     // Check for literal
     if (isdigit(*currAbsPos)) {
+        int64_t value = strtol(currAbsPos, 0, 10);
 
-       int64_t value = strtol(currAbsPos, 0, 10);
+        size_t n{0};
 
-        res = make_unique<Literal>(SourceCodeReference(currLine, currPos), value);
+        while (isdigit(*(currAbsPos + n)))
+            ++n;
+
+        res = make_unique<Literal>(SourceCodeReference(currLine, currPos, n), value);
 
         // Move Lexer position to the end of the literal
-        while(isdigit(*currAbsPos)) {
+        while (isdigit(*currAbsPos)) {
             ++currPos;
             ++currAbsPos;
         }
@@ -39,26 +44,25 @@ std::unique_ptr<Token> Lexer::nextToken() {
     }
     // Check for Keyword and Identifier
     else if (isalpha(*currAbsPos)) {
-
         // calculate the length of the token
         size_t n = 0;
-        while(isalpha(currAbsPos[n]))
+        while (isalpha(currAbsPos[n]))
             ++n;
 
         string_view tk(currAbsPos, n);
 
         if (tk == "PARAM")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::Parameter);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Parameter);
         else if (tk == "VAR")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::Var);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Var);
         else if (tk == "CONST")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::Constant);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Constant);
         else if (tk == "BEGIN")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::Begin);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Begin);
         else if (tk == "END")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::End);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::End);
         else if (tk == "RETURN")
-            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), Keyword::KeywordType::Ret);
+            res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Ret);
         else
             res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), tk);
 
@@ -68,91 +72,72 @@ std::unique_ptr<Token> Lexer::nextToken() {
     }
     // Check for Separator tokens
     else if (*currAbsPos == '.') {
-
-        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), Separator::SeparatorType::Dot);
+        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), SeparatorType::Dot);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == ',') {
-
-        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), Separator::SeparatorType::Comma);
+    } else if (*currAbsPos == ',') {
+        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), SeparatorType::Comma);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == ';') {
-
-        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), Separator::SeparatorType::SemiColon);
+    } else if (*currAbsPos == ';') {
+        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), SeparatorType::SemiColon);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == '(') {
-
-        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), Separator::SeparatorType::OpenPar);
+    } else if (*currAbsPos == '(') {
+        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), SeparatorType::OpenPar);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == ')') {
-
-        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), Separator::SeparatorType::CloasePar);
+    } else if (*currAbsPos == ')') {
+        res = make_unique<Separator>(SourceCodeReference(currLine, currPos), SeparatorType::ClosePar);
         ++currPos;
         ++currAbsPos;
         return res;
     }
     // Check for Arithmetic operator tokens
     else if (*currAbsPos == '+') {
-
-        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticOperator::ArithmeticType::Plus);
+        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticType::Plus);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == '-') {
-
-        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticOperator::ArithmeticType::Minus);
+    } else if (*currAbsPos == '-') {
+        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticType::Minus);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == '*') {
-
-        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticOperator::ArithmeticType::Mul);
+    } else if (*currAbsPos == '*') {
+        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticType::Mul);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == '/') {
-
-        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticOperator::ArithmeticType::Div);
+    } else if (*currAbsPos == '/') {
+        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticType::Div);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == '=') {
-
-        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticOperator::ArithmeticType::Assign);
+    } else if (*currAbsPos == '=') {
+        res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos), ArithmeticType::Assign);
         ++currPos;
         ++currAbsPos;
         return res;
-    }
-    else if (*currAbsPos == ':') {
-
+    } else if (*currAbsPos == ':') {
         if (*(currAbsPos + 1) == '=') {
-            res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos, 2), ArithmeticOperator::ArithmeticType::VarAssign);
+            res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos, 2), ArithmeticType::VarAssign);
             currPos += 2;
             currAbsPos += 2;
             return res;
-        }
-        else {
+        } else {
             manager.printErrorMessage("expected '=' after ':'", SourceCodeReference(currLine, currPos, 2));
             return nullptr;
         }
     }
 
-    manager.printErrorMessage("Unrecognized Character", SourceCodeReference{currLine,currPos});
+    manager.printErrorMessage("Unrecognized Character", SourceCodeReference{currLine, currPos});
 
     return nullptr;
 }
+
+} // namespace jit
