@@ -40,6 +40,7 @@ class TreeNode {
     // Destructor
     virtual ~TreeNode() = default;
 
+    // accept               accept method for the visitor pattern
     virtual void accept(ParseTreeVisitor& visitor) const = 0;
 
     const Type nodetype;                    // Specifies the type of the parse tree node
@@ -47,9 +48,13 @@ class TreeNode {
 
 };
 
-
+// Base class for all non terminal nodes of the parse tree
 class NonTerminalTreeNode : public TreeNode {
 
+    public:
+    NonTerminalTreeNode(Type nodetype, SourceCodeReference location, std::vector<std::unique_ptr<TreeNode>> nodes) : TreeNode{nodetype, location}, nodes{std::move(nodes)} {}
+
+    std::vector<std::unique_ptr<TreeNode>> nodes{};
 };
 
 
@@ -60,6 +65,7 @@ class IdentifierNode : public TreeNode {
     // Constructor
     IdentifierNode(SourceCodeReference location, std::string_view id) : TreeNode{TreeNode::Type::Identifier, location}, id{id} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
     std::string_view id;
@@ -73,6 +79,7 @@ class LiteralNode : public TreeNode {
     // Constructor
     LiteralNode(SourceCodeReference location, int64_t value) : TreeNode{TreeNode::Type::Literal, location}, value{value} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
     int64_t value;
@@ -83,9 +90,18 @@ class GenericTerminalNode : public TreeNode {
 
     public:
 
+    enum class SubType {
+        Plus,
+        Minus,
+        Mul,
+        Div,
+        Other
+    };
+
     // Constructor
     explicit GenericTerminalNode(SourceCodeReference location) : TreeNode{TreeNode::Type::GenericTerminal, location} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
 };
@@ -101,31 +117,32 @@ class PrimaryExprNode : public NonTerminalTreeNode {
         AdditiveExpr
     };
 
-    PrimaryExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::PrimaryExpr, location},
-                                                                                                                    subtype{subtype}, nodes{std::move(nodes)} {}
+    // Constructor
+    PrimaryExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::PrimaryExpr, location, std::move(nodes)},
+                                                                                                                   subtype{subtype} {}
+
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    const SubType subtype;
-    std::vector<std::unique_ptr<TreeNode>> nodes;
-
+    const SubType subtype;          // Indicates the subtype of the Primary Expression
 };
 
 
-class UnaryExprNode : public TreeNode {
+class UnaryExprNode : public NonTerminalTreeNode {
 
     public:
 
-    UnaryExprNode(bool sign, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::UnaryExpr, location},
-                                                                                                               sign{sign}, nodes{std::move(nodes)} {}
+    UnaryExprNode(bool sign, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::UnaryExpr, location, std::move(nodes)},
+                                                                                                           sign{sign} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
     bool sign{false};
-    std::vector<std::unique_ptr<TreeNode>> nodes;
 
 };
 
-class MultExprNode : public TreeNode {
+class MultExprNode : public NonTerminalTreeNode {
 
     public:
 
@@ -135,18 +152,18 @@ class MultExprNode : public TreeNode {
     };
 
     // Constructor
-    MultExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::MultExpr, location},
-                                                                                                                subtype{subtype}, nodes{move(nodes)} {}
+    MultExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::MultExpr, location, std::move(nodes)},
+                                                                                                                subtype{subtype} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    const SubType subtype;
-    std::vector<std::unique_ptr<TreeNode>> nodes;
+    const SubType subtype;          // Indicates the subtype of the Multiplicative Expression
 
 };
 
 
-class AdditiveExprNode : public TreeNode {
+class AdditiveExprNode : public NonTerminalTreeNode {
 
     public:
 
@@ -156,32 +173,27 @@ class AdditiveExprNode : public TreeNode {
     };
 
     // Constructor
-    AdditiveExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::AdditiveExpr, location},
-                                                                                                                   subtype{subtype}, nodes{move(nodes)} {}
+    AdditiveExprNode(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::AdditiveExpr, location, std::move(nodes)},
+                                                                                                                   subtype{subtype} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    const SubType subtype;
-    std::vector<std::unique_ptr<TreeNode>> nodes;
-
-
+    const SubType subtype;          // Indicates the subtype of the Additive Expression
 };
 
-class AssignExprNode : public TreeNode {
+class AssignExprNode : public NonTerminalTreeNode {
 
     public:
 
     // Constructor
-    AssignExprNode(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::AssignExpr, location},
-                                                                                                 nodes{move(nodes)} {}
+    AssignExprNode(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::AssignExpr, location, std::move(nodes)} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
-    std::vector<std::unique_ptr<TreeNode>> nodes;
-
 };
 
-class Statement : public TreeNode {
+class Statement : public NonTerminalTreeNode {
 
     public:
 
@@ -190,63 +202,59 @@ class Statement : public TreeNode {
         Assign
     };
 
-
     // Constructor
-    Statement(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::Statement, location},
-                                                                                                             subtype{subtype}, nodes{move(nodes)} {}
+    Statement(SubType subtype, std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::Statement, location, std::move(nodes)},
+                                                                                                             subtype{subtype} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    const SubType subtype;
-    std::vector<std::unique_ptr<TreeNode>> nodes;
+    const SubType subtype;          // Indicates the subtype of the Statement
 };
 
-class StatementList : public TreeNode {
+class StatementList : public NonTerminalTreeNode {
 
     public:
 
     // Constructor
-    StatementList(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::StatementList, location},
-                                                                                                nodes{move(nodes)} {}
+    StatementList(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::StatementList, location, std::move(nodes)} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
-    std::vector<std::unique_ptr<TreeNode>> nodes;
-
 };
 
-class CompoundStatement : public TreeNode {
+class CompoundStatement : public NonTerminalTreeNode {
 
     public:
 
     // Constructor
-    CompoundStatement(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : TreeNode{TreeNode::Type::CompundStatement, location},
-    nodes{move(nodes)} {}
+    CompoundStatement(std::vector<std::unique_ptr<TreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{TreeNode::Type::CompundStatement, location, std::move(nodes)} {}
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
-    std::vector<std::unique_ptr<TreeNode>> nodes;
-
 };
 
 
 class ParamDeclNode : public TreeNode {
     public:
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
 };
 
 class VarDeclNode : public TreeNode {
 
     public:
 
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
 class ConstDeclNode : public TreeNode {
 
     public:
+
+    // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
 };
@@ -254,8 +262,9 @@ class ConstDeclNode : public TreeNode {
 class DeclListNode : public TreeNode {
 
     public:
-    void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
+    // accept               accept method for the visitor pattern
+    void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
 

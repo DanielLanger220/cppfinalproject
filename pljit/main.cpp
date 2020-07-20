@@ -51,9 +51,9 @@ int main() {
 */
 //    std::string code3 = "(220 * 13) * 57 + 284\n";
 
-    //std::string code3 = "BEGIN Sophie := Daniel;\nSophie := (220 * -(-Daniel)) * (57 + 284);\nRETURN 3;Sophie := 284\nEND\n";
+    std::string code3 = "BEGIN Sophie := Daniel;\nSophie := 220 * -Daniel * (57 + 284);\nRETURN 3;Sophie := 284\nEND\n";
 
-    std::string code3 = "BEGIN Sophie := Daniel; Sophie := (((220 + 284))) * 3 END\n";
+    //std::string code3 = "BEGIN Sophie := Daniel; Sophie := (((220 + 284))) * 3 END\n";
 
     Parser p{code3};
 

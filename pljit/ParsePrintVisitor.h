@@ -49,7 +49,8 @@ class ParsePrintVisitor : public ParseTreeVisitor {
 
     // Helper methods
 
-    void printNonTerminalNode(std::string label);
+    // printNonTerminalNode             Prints the given non terminal node and all children
+    void printNonTerminalNode(std::string label, const NonTerminalTreeNode& node);
 
 };
 

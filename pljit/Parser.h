@@ -40,10 +40,18 @@ class Parser {
 
 
     private:
+
+    // Here, tokens are placed when they were falsely taken from the lexer to try an alternative
+    // from a non-terminal symbol which yields in a false alternative
     std::unique_ptr<Token> lookaheadToken{ nullptr};
-    std::unique_ptr<Token> nextToken() { return lookaheadToken ? std::move(lookaheadToken) : lex.nextToken();}
+
 
     // Helper methods
+
+    // nextToken                If the lookahead token is filled with a token, returns this token, otherwise takes the next token from the lexer
+    std::unique_ptr<Token> nextToken() { return lookaheadToken ? std::move(lookaheadToken) : lex.nextToken();}
+
+
     static bool checkForAddSub(const Token* tk);
     static bool checkForMulDiv(const Token* tk);
     static bool checkForOpenPar(const Token* tk);
