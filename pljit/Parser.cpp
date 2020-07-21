@@ -5,6 +5,32 @@ namespace jit {
 using namespace std;
 
 
+
+std::unique_ptr<IdentifierNode> Parser::parseIdentifier() {
+
+    auto currToken = nextToken();
+
+    if (currToken->tokentype == TokenType::Identifier)
+        return make_unique<IdentifierNode>(currToken->location, static_cast<Identifier*>(currToken.get())->id);
+    else {
+        lookaheadToken = move(currToken);
+        return nullptr;
+    }
+}
+
+std::unique_ptr<LiteralNode> Parser::parseLiteral() {
+
+    auto currToken = nextToken();
+
+    if (currToken->tokentype == TokenType::Literal)
+        return make_unique<LiteralNode>(currToken->location, static_cast<Literal*>(currToken.get())->value);
+    else {
+        lookaheadToken = move(currToken);
+        return nullptr;
+    }
+
+}
+
 std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
 
 
@@ -29,7 +55,8 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
 
     }
     // Check for -> "("  additive-expr  ")"
-    else if (checkForOpenPar(currToken.get())) {
+    //else if (checkForOpenPar(currToken.get())) {
+    else if(checkForSeparatorToken(currToken.get()) == SeparatorType::OpenPar) {
 
          // Push "(" to the child nodes
         nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
@@ -45,7 +72,7 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
         // Check for ")"
         auto n = nextToken();
 
-        if (n && checkForClosePar(n.get())) {
+        if (n && checkForSeparatorToken(n.get()) == SeparatorType::ClosePar) {
             nodes.push_back(make_unique<GenericTerminalNode>(n->location));
 
             size_t range = manager.getabsolutePosition(n->location) + 1 - manager.getabsolutePosition(nodes.front()->location);
@@ -54,7 +81,8 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
 
         }
         else {
-            manager.printErrorMessage("Error: ')' expected", n->location);
+            manager.printErrorMessage("error: ')' expected ...", n->location);
+            manager.printErrorMessage("... to match this '('", nodes[0]->location);
             return nullptr;
         }
 
@@ -72,7 +100,7 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr() {
     // Parse multiplicative expression
     auto multexpr = parseMultExpr();
 
-    AdditiveExprNode::SubType t {AdditiveExprNode::SubType::Unary};
+    AdditiveExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
 
     // Vector for child nodes
     vector<unique_ptr<TreeNode>> nodes{};
@@ -85,7 +113,10 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr() {
 
     // Check for optional ("+"|"-")  additive-expression
     auto tk = nextToken();
-    if (tk && checkForAddSub(tk.get())) {
+    auto t= checkForArithmeticToken(tk.get());
+
+    if (t == ArithmeticType::Plus || t == ArithmeticType::Minus) {
+
         nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
 
         auto addexpr = parseAdditiveExpr();
@@ -93,7 +124,7 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr() {
         if (!addexpr)
             return nullptr;
 
-        t = AdditiveExprNode::SubType::Binary;
+        subtype = AdditiveExprNode::SubType::Binary;
         nodes.push_back(move(addexpr));
 
     }
@@ -104,7 +135,7 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    return make_unique<AdditiveExprNode>(t, move(nodes), ref);
+    return make_unique<AdditiveExprNode>(subtype, move(nodes), ref);
 
 }
 
@@ -114,7 +145,7 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr() {
     // Parse unary expression
     auto unaryexpr = parseUnaryExpr();
 
-    MultExprNode::SubType t {AdditiveExprNode::SubType::Unary};
+    MultExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
 
     // Vector for child nodes
     vector<unique_ptr<TreeNode>> nodes{};
@@ -127,8 +158,10 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr() {
 
     // Check for optional ("*"|"/")  multiplicative-expression
     auto tk = nextToken();
+    auto t = checkForArithmeticToken(tk.get());
 
-    if (tk && checkForMulDiv(tk.get())) {
+    if (t == ArithmeticType::Mul || t == ArithmeticType::Div) {
+
         nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
 
         auto multexpr = parseMultExpr();
@@ -136,7 +169,7 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr() {
         if (!multexpr)
             return nullptr;
 
-        t = MultExprNode::SubType::Binary;
+        subtype = MultExprNode::SubType::Binary;
         nodes.push_back(move(multexpr));
 
     }
@@ -146,7 +179,7 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    return make_unique<MultExprNode>(t, move(nodes), ref);
+    return make_unique<MultExprNode>(subtype, move(nodes), ref);
 }
 
 std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr() {
@@ -156,11 +189,17 @@ std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr() {
 
     vector<unique_ptr<TreeNode>> nodes{};
 
-    bool sign{false};
+    UnaryExprNode::SubType subtype{UnaryExprNode::SubType::NoSign};
 
-    if (checkForAddSub(currToken.get())) {
+    auto t = checkForArithmeticToken(currToken.get());
 
-        sign = true;
+    if (t == ArithmeticType::Plus) {
+
+        subtype = UnaryExprNode::SubType::Plus;
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    }
+    else if (t == ArithmeticType::Minus) {
+        subtype = UnaryExprNode::SubType::Minus;
         nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
     }
     else
@@ -176,7 +215,7 @@ std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    return make_unique<UnaryExprNode>(sign, move(nodes), ref);
+    return make_unique<UnaryExprNode>(subtype, move(nodes), ref);
 }
 
 
@@ -202,7 +241,8 @@ std::unique_ptr<AssignExprNode> Parser::parseAssignExpr() {
         return nullptr;
 
 
-    if (!checkForVarAssign(tk.get())) {
+    auto t = checkForArithmeticToken(tk.get());
+    if (t != ArithmeticType::VarAssign) {
 
         manager.printErrorMessage("Error: ':=' expected", tk->location);
         return nullptr;
@@ -231,7 +271,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
     // Vector for the child nodes
     vector<unique_ptr<TreeNode>> nodes{};
 
-    Statement::SubType t{Statement::SubType::Assign};
+    Statement::SubType subtype{Statement::SubType::Assign};
 
 
     // get the current token, either from lookahead of parent method or from lexer
@@ -241,9 +281,10 @@ std::unique_ptr<Statement> Parser::parseStatement() {
         return nullptr;
 
     // Check for RETURN
-    if(checkForReturn(currToken.get())) {
+    auto t = checkForKeywordToken(currToken.get());
+    if(t == KeywordType::Ret) {
 
-        t = Statement::SubType::Return;
+        subtype = Statement::SubType::Return;
         nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
 
         // Check for additive-expression
@@ -270,7 +311,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    return make_unique<Statement>(t, move(nodes), ref);
+    return make_unique<Statement>(subtype, move(nodes), ref);
 }
 
 std::unique_ptr<StatementList> Parser::parseStatementList() {
@@ -286,8 +327,9 @@ std::unique_ptr<StatementList> Parser::parseStatementList() {
     nodes.push_back(move(statement));
 
     auto tk = nextToken();
+    auto t = checkForSeparatorToken(tk.get());
 
-    while(tk && checkForSemiColon(tk.get())) {
+    while(t == SeparatorType::SemiColon) {
 
         nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
 
@@ -295,10 +337,11 @@ std::unique_ptr<StatementList> Parser::parseStatementList() {
 
         if(statement)
             nodes.push_back(move(statement));
-        else {
+        else
             return nullptr;
-        }
+
         tk = nextToken();
+        t = checkForSeparatorToken(tk.get());
     }
 
     // move the falsely read token that was no ';' back to the lookahead
@@ -311,7 +354,7 @@ std::unique_ptr<StatementList> Parser::parseStatementList() {
 }
 
 
-std::unique_ptr<CompoundStatement> Parser::parseCompundStatement() {
+std::unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 
     // Vector for the child nodes
     vector<unique_ptr<TreeNode>> nodes{};
@@ -323,7 +366,9 @@ std::unique_ptr<CompoundStatement> Parser::parseCompundStatement() {
     if (!tk)
         return nullptr;
 
-    if (checkForBegin(tk.get())) {
+    auto t = checkForKeywordToken(tk.get());
+
+    if (t == KeywordType::Begin) {
 
         nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
     }
@@ -346,7 +391,9 @@ std::unique_ptr<CompoundStatement> Parser::parseCompundStatement() {
     if (!tk)
         return nullptr;
 
-    if (checkForEnd(tk.get())) {
+    t = checkForKeywordToken(tk.get());
+
+    if (t == KeywordType::End) {
 
         nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
     }
@@ -362,88 +409,400 @@ std::unique_ptr<CompoundStatement> Parser::parseCompundStatement() {
 }
 
 
+std::unique_ptr<InitDeclNode> Parser::parseInitDecl() {
+
+    // get the current token, either from lookahead of parent method or from lexer
+    unique_ptr<Token> currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    // vector of child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    // Check for -> Identifier
+    if (currToken->tokentype == TokenType::Identifier) {
+        nodes.push_back(make_unique<IdentifierNode>(currToken->location, static_cast<Identifier*>(currToken.get())->id));
+    }
+    else {
+        manager.printErrorMessage("error: Identifier expected", currToken->location);
+        return nullptr;
+    }
+
+    // Check for -> =
+    currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    auto t = checkForArithmeticToken(currToken.get());
+    if (t == ArithmeticType::Assign)
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    else {
+        manager.printErrorMessage("error: '=' expected", currToken->location);
+        return nullptr;
+    }
+
+    // Check for -> Literal
+    currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+
+    if (currToken->tokentype == TokenType::Literal)
+        nodes.push_back(make_unique<LiteralNode>(currToken->location, static_cast<Literal*>(currToken.get())->value));
+    else {
+        manager.printErrorMessage("error: literal expected", currToken->location);
+    }
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<InitDeclNode>(std::move(nodes), ref);
+}
+
+
+std::unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
+
+    // Vector for the child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    auto initdecl = parseInitDecl();
+
+    if (!initdecl)
+        return nullptr;
+
+    nodes.push_back(move(initdecl));
+
+    auto tk = nextToken();
+    auto t = checkForSeparatorToken(tk.get());
+
+    while(t == SeparatorType::Comma) {
+
+        nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
+
+        initdecl = parseInitDecl();
+
+        if(initdecl)
+            nodes.push_back(move(initdecl));
+        else
+            return nullptr;
+
+        tk = nextToken();
+        t = checkForSeparatorToken(tk.get());
+    }
+
+    // move the falsely read token that was no ';' back to the lookahead
+    lookaheadToken = move(tk);
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<InitDeclListNode>(move(nodes), ref);
+
+}
+
+
+std::unique_ptr<DeclListNode> Parser::parseDeclList() {
+
+    // get the current token, either from lookahead of parent method or from lexer
+    unique_ptr<Token> currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    // vector of child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    // Check for -> Identifier
+    if (currToken->tokentype == TokenType::Identifier) {
+        nodes.push_back(make_unique<IdentifierNode>(currToken->location, static_cast<Identifier*>(currToken.get())->id));
+    }
+    else {
+        manager.printErrorMessage("error: Identifier expected", currToken->location);
+        return nullptr;
+    }
+
+
+
+    currToken = nextToken();
+    auto t = checkForSeparatorToken(currToken.get());
+
+    while(t == SeparatorType::Comma) {
+
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+
+        currToken = nextToken();
+
+        if (currToken->tokentype == TokenType::Identifier) {
+            nodes.push_back(make_unique<IdentifierNode>(currToken->location, static_cast<Identifier*>(currToken.get())->id));
+        }
+        else {
+            manager.printErrorMessage("error: Identifier expected", currToken->location);
+            return nullptr;
+        }
+
+        currToken = nextToken();
+        t = checkForSeparatorToken(currToken.get());
+    }
+
+    // move the falsely read token that was no ';' back to the lookahead
+    lookaheadToken = move(currToken);
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<DeclListNode>(move(nodes), ref);
+
+}
+
+
+std::unique_ptr<ParamDeclNode> Parser::parseParamDecl() {
+
+    // Vector for the child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    auto currToken = nextToken();
+
+
+    // Check for 'PARAM'
+    if (!currToken)
+        return nullptr;
+
+    auto t = checkForKeywordToken(currToken.get());
+
+    if (t == KeywordType::Parameter)
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    else {
+
+        lookaheadToken = move(currToken);
+        return nullptr;
+    }
+
+    // Parse the decl-list
+    auto decllist = parseDeclList();
+
+    if (!decllist)
+        return nullptr;
+
+    nodes.push_back(move(decllist));
+
+    // Check for ';'
+    currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    auto t2 = checkForSeparatorToken(currToken.get());
+
+    if (t2 == SeparatorType::SemiColon) {
+
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    }
+    else {
+        manager.printErrorMessage("Error: ';' expected", currToken->location);
+        return nullptr;
+    }
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<ParamDeclNode>(move(nodes), ref);
+
+
+}
+
+std::unique_ptr<VarDeclNode> Parser::parseVarDecl() {
+
+    // Vector for the child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    auto currToken = nextToken();
+
+
+    // Check for 'VAR'
+    if (!currToken)
+        return nullptr;
+
+    auto t = checkForKeywordToken(currToken.get());
+
+    if (t == KeywordType::Var)
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    else {
+        lookaheadToken = move(currToken);
+        return nullptr;
+    }
+
+    // Parse the decl-list
+    auto decllist = parseDeclList();
+
+    if (!decllist)
+        return nullptr;
+
+    nodes.push_back(move(decllist));
+
+    // Check for ';'
+    currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    auto t2 = checkForSeparatorToken(currToken.get());
+
+    if (t2 == SeparatorType::SemiColon) {
+
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    }
+    else {
+        manager.printErrorMessage("Error: ';' expected", currToken->location);
+        return nullptr;
+    }
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<VarDeclNode>(move(nodes), ref);
+
+
+}
+std::unique_ptr<ConstDeclNode> Parser::parseConstDecl() {
+
+    // Vector for the child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    auto currToken = nextToken();
+
+
+    // Check for 'CONST'
+    if (!currToken)
+        return nullptr;
+
+    auto t = checkForKeywordToken(currToken.get());
+
+    if (t == KeywordType::Constant)
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    else {
+        lookaheadToken = move(currToken);
+        return nullptr;
+    }
+
+    // Parse the init-decl-list
+    auto initdecllist = parseInitDeclList();
+
+    if (!initdecllist)
+        return nullptr;
+
+    nodes.push_back(move(initdecllist));
+
+    // Check for ';'
+    currToken = nextToken();
+
+    if (!currToken)
+        return nullptr;
+
+    auto t2 = checkForSeparatorToken(currToken.get());
+
+    if (t2 == SeparatorType::SemiColon) {
+
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    }
+    else {
+        manager.printErrorMessage("Error: ';' expected", currToken->location);
+        return nullptr;
+    }
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+    return make_unique<ConstDeclNode>(move(nodes), ref);
+
+
+}
+
+
+std::unique_ptr<FuncDeclNode> Parser::parseFunction() {
+
+    // Vector for the child nodes
+    vector<unique_ptr<TreeNode>> nodes{};
+
+    bool hasParam{false};
+    bool hasVar{false};
+    bool hasConst{false};
+
+    auto paramdecl = parseParamDecl();
+    if (paramdecl) {
+        hasParam = true;
+        nodes.push_back(move(paramdecl));
+    }
+
+    auto vardecl = parseVarDecl();
+    if (vardecl) {
+        hasVar = true;
+        nodes.push_back(move(vardecl));
+    }
+
+    auto constdecl = parseConstDecl();
+    if (constdecl) {
+        hasConst = true;
+        nodes.push_back(move(constdecl));
+    }
+
+    auto compstatement = parseCompoundStatement();
+    if (!compstatement)
+        return nullptr;
+
+    nodes.push_back(move(compstatement));
+
+
+    // Check for final .
+    auto currToken = nextToken();
+    auto t = checkForSeparatorToken(currToken.get());
+    if (t == SeparatorType::Dot)
+        nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
+    else {
+        manager.printErrorMessage("error: '.' expected", currToken->location);
+        return nullptr;
+    }
+
+    size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
+    SourceCodeReference ref{nodes.front()->location, range};
+
+
+    return make_unique<FuncDeclNode>(move(nodes), hasParam, hasVar, hasConst, ref);
+
+}
+
+
 // **********************************************
 // Helper methods
 // **********************************************
 
-bool Parser::checkForAddSub(const Token* tk) {
+std::optional<KeywordType> Parser::checkForKeywordToken(const Token* tk)
+{
+    if (!tk || tk->tokentype != TokenType::Keyword)
+        return nullopt;
 
-    if (tk->tokentype != TokenType::ArithmeticOperator)
-        return false;
-
-    auto t = static_cast<const ArithmeticOperator*>(tk)->arithmetictype;
-
-    return t == ArithmeticType::Plus || t == ArithmeticType::Minus;
-}
-
-bool Parser::checkForMulDiv(const Token* tk) {
-
-    if (tk->tokentype != TokenType::ArithmeticOperator)
-        return false;
-
-    auto t = static_cast<const ArithmeticOperator*>(tk)->arithmetictype;
-
-    return t == ArithmeticType::Mul || t == ArithmeticType::Div;
-}
-
-bool Parser::checkForOpenPar(const Token* tk) {
-
-    if (tk->tokentype != TokenType::Separator)
-        return false;
-
-    return (static_cast<const Separator*>(tk)->separatortype == SeparatorType::OpenPar);
+    return (make_optional(static_cast<const Keyword*>(tk)->keywordtype));
 
 }
 
-bool Parser::checkForClosePar(const Token *tk) {
+std::optional<ArithmeticType> Parser::checkForArithmeticToken(const Token* tk)
+{
+    if (!tk || tk->tokentype != TokenType::ArithmeticOperator)
+        return nullopt;
 
-    if (tk->tokentype != TokenType::Separator)
-        return false;
-
-    return (static_cast<const Separator*>(tk)->separatortype == SeparatorType::ClosePar);
-
-}
-bool Parser::checkForVarAssign(const Token* tk) {
-
-    if (tk->tokentype != TokenType::ArithmeticOperator)
-        return false;
-
-    return (static_cast<const ArithmeticOperator*>(tk)->arithmetictype == ArithmeticType::VarAssign);
-}
-
-bool Parser::checkForReturn(const Token* tk) {
-
-    if (tk->tokentype != TokenType::Keyword)
-        return false;
-
-    return (static_cast<const Keyword*>(tk)->keywordtype == KeywordType::Ret);
+    return (make_optional(static_cast<const ArithmeticOperator*>(tk)->arithmetictype));
 
 }
 
-bool Parser::checkForSemiColon(const Token* tk) {
+std::optional<SeparatorType> Parser::checkForSeparatorToken(const Token* tk)
+{
 
-    if (tk->tokentype != TokenType::Separator)
-        return false;
+    if (!tk || tk->tokentype != TokenType::Separator)
+        return nullopt;
 
-    return (static_cast<const Separator*>(tk)->separatortype == SeparatorType::SemiColon);
-
-}
-
-bool Parser::checkForBegin(const Token* tk) {
-
-    if (tk->tokentype != TokenType::Keyword)
-        return false;
-
-    return (static_cast<const Keyword*>(tk)->keywordtype == KeywordType::Begin);
-
-}
-
-bool Parser::checkForEnd(const Token* tk) {
-
-    if (tk->tokentype != TokenType::Keyword)
-        return false;
-
-    return (static_cast<const Keyword*>(tk)->keywordtype == KeywordType::End);
+    return (make_optional(static_cast<const Separator*>(tk)->separatortype));
 
 }
 

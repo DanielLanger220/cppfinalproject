@@ -21,43 +21,17 @@ int main() {
 
     std::unique_ptr<Token> res;
 
-  /*  while((res = lex.nextToken()) != nullptr) {
-
-
-        if (res == nullptr)
-            break;
-
-
-        cout << manager.getString(res->location) << "\t\t\t\t" << (int)res->tokentype << endl;
-
-        //if (res->tokentype == Token::TokenType::Literal)
-        {
-            //manager.printErrorMessage("Sophie", res->location);
-        }
-
-        //cout << (int)res->tokentype;
-
-        /*if (res->tokentype == Token::TokenType::ArithmeticOperator)
-            cout << "\t" << (int)static_cast<ArithmeticOperator*>(res.get())->type << endl;
-        else if (res->tokentype == Token::TokenType::Identifier)
-            cout << "\t" << static_cast<Identifier*>(res.get())->id << endl;
-        else if (res->tokentype == Token::TokenType::Literal)
-            cout << "\t" << static_cast<Literal*>(res.get())->value << endl;
-        else
-            cout << "\n";
-
-    }
-
-*/
 //    std::string code3 = "(220 * 13) * 57 + 284\n";
 
-    std::string code3 = "BEGIN Sophie := Daniel;\nSophie := 220 * -Daniel * (57 + 284);\nRETURN 3;Sophie := 284\nEND\n";
+    //std::string code3 = "BEGIN Sophie := Daniel;\nSophie := 220 * -Daniel * (57 + 284);\nRETURN 3;Sophie := 284\nEND\n";
 
-    //std::string code3 = "BEGIN Sophie := Daniel; Sophie := (((220 + 284))) * 3 END\n";
+    std::string code3 = "PARAM Sophie; CONST Daniel = 284; BEGIN Sophie := Daniel;\nSophie := 220 + 284 ;\nRETURN 284  END.\n";
+
+    std::string code4 = "CONST Sophie = 220, Daniel = 284, Sophie = 95, Jynx = 83, Kata = 41;\n";
 
     Parser p{code3};
 
-    auto n = p.parseCompundStatement();
+    auto n = p.parseFunction();
 
     cout << n->nodes.size() << endl;
 

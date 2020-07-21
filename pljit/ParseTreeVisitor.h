@@ -20,6 +20,8 @@ class ParamDeclNode;
 class VarDeclNode;
 class ConstDeclNode;
 class DeclListNode;
+class InitDeclNode;
+class InitDeclListNode;
 class FuncDeclNode;
 
 
@@ -42,6 +44,8 @@ class ParseTreeVisitor {
     virtual void visit(const VarDeclNode& node) = 0;
     virtual void visit(const ConstDeclNode& node) = 0;
     virtual void visit(const DeclListNode& node) = 0;
+    virtual void visit(const InitDeclNode& node) = 0;
+    virtual void visit(const InitDeclListNode& node) = 0;
     virtual void visit(const FuncDeclNode& node) = 0;
 };
 

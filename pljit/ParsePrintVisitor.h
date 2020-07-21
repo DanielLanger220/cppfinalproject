@@ -36,6 +36,8 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     void visit(const VarDeclNode& node) override;
     void visit(const ConstDeclNode& node) override;
     void visit(const DeclListNode& node) override;
+    void visit(const InitDeclNode& node) override;
+    void visit(const InitDeclListNode& node) override;
     void visit(const FuncDeclNode& node) override;
 
 

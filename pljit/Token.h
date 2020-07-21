@@ -8,11 +8,11 @@ namespace jit {
 
 
 enum class TokenType {
-    Keyword,            // 0
-    Separator,          // 1
-    Identifier,         // 2
-    Literal,            // 3
-    ArithmeticOperator  // 4
+    Keyword,
+    Separator,
+    Identifier,
+    Literal,
+    ArithmeticOperator
 };
 
 enum class KeywordType {
@@ -33,12 +33,12 @@ enum class SeparatorType {
 };
 
 enum class ArithmeticType {
-    Plus,
-    Minus,
-    Mul,
-    Div,
-    VarAssign,  // :=
-    Assign      // =
+    Plus =      0x0001,
+    Minus =     0x0002,
+    Mul =       0x0004,
+    Div =       0x0008,
+    VarAssign = 0x0010,  // :=
+    Assign =    0x0020   // =
 };
 
 class Token {
@@ -56,8 +56,6 @@ class Token {
 class Keyword : public Token {
 
     public:
-
-
 
     // Constructor
     Keyword(SourceCodeReference loc, KeywordType type) : Token{loc, TokenType::Keyword}, keywordtype{type} {}

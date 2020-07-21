@@ -80,24 +80,40 @@ void ParsePrintVisitor::visit(const CompoundStatement& node) {
 
 void ParsePrintVisitor::visit(const ParamDeclNode& node) {
 
-
+    printNonTerminalNode("Param-Decl", node);
 }
 
 void ParsePrintVisitor::visit(const VarDeclNode& node) {
 
+    printNonTerminalNode("Var-Decl", node);
 }
 
 void ParsePrintVisitor::visit(const ConstDeclNode& node) {
 
+    printNonTerminalNode("Const-Decl", node);
 }
 
 void ParsePrintVisitor::visit(const DeclListNode& node) {
 
+    printNonTerminalNode("Decl-List", node);
+}
+
+
+void ParsePrintVisitor::visit(const InitDeclNode& node) {
+
+    printNonTerminalNode("Init-Decl", node);
+}
+
+void ParsePrintVisitor::visit(const InitDeclListNode& node) {
+
+    printNonTerminalNode("Init-Decl-List", node);
 }
 
 void ParsePrintVisitor::visit(const FuncDeclNode& node) {
 
+    printNonTerminalNode("Function-Decl", node);
 }
+
 void ParsePrintVisitor::printTree(TreeNode& root) {
 
     of.open(filename);
@@ -114,6 +130,7 @@ void ParsePrintVisitor::printTree(TreeNode& root) {
 
     of.close();
 }
+
 void ParsePrintVisitor::printNonTerminalNode(std::string label, const NonTerminalTreeNode& node ) {
 
     // Print the label of the node
