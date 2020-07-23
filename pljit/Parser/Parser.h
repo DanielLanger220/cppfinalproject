@@ -3,8 +3,8 @@
 
 #include <optional>
 
-#include "Lexer.h"
-#include "TreeNode.h"
+#include "ParseTreeNode.h"
+#include "pljit/Lexer/Lexer.h"
 
 namespace jit {
 
@@ -60,9 +60,9 @@ class Parser {
     std::unique_ptr<Token> nextToken() { return lookaheadToken ? std::move(lookaheadToken) : lex.nextToken();}
 
 
-    static std::optional<KeywordType> checkForKeywordToken(const Token* tk);
-    static std::optional<ArithmeticType> checkForArithmeticToken(const Token* tk);
-    static std::optional<SeparatorType> checkForSeparatorToken(const Token* tk);
+    static std::optional<Keyword::KeywordType> checkForKeywordToken(const Token* tk);
+    static std::optional<ArithmeticOperator::ArithmeticType> checkForArithmeticToken(const Token* tk);
+    static std::optional<Separator::SeparatorType> checkForSeparatorToken(const Token* tk);
 
 };
 

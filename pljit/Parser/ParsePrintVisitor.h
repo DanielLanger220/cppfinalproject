@@ -1,12 +1,11 @@
 #ifndef PLJIT_PARSEPRINTVISITOR_H
 #define PLJIT_PARSEPRINTVISITOR_H
 
-#include <iostream>
 #include <fstream>
 
-#include "SourceCodeManager.h"
+#include "ParseTreeNode.h"
 #include "ParseTreeVisitor.h"
-#include "TreeNode.h"
+#include "pljit/SourceCodeManager.h"
 
 namespace jit {
 
@@ -18,7 +17,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     explicit ParsePrintVisitor(std::string filename, SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
     // printTree            Prints the parse tree defined by the given node a root
-    void printTree(TreeNode& root);
+    void printTree(ParseTreeNode& root);
 
     // The visit methods for the visitor pattern
     void visit(const IdentifierNode& node) override ;
@@ -52,7 +51,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     // Helper methods
 
     // printNonTerminalNode             Prints the given non terminal node and all children
-    void printNonTerminalNode(std::string label, const NonTerminalTreeNode& node);
+    void printNonTerminalNode(const std::string& label, const NonTerminalTreeNode& node);
 
 };
 

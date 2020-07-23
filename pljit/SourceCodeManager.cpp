@@ -31,20 +31,20 @@ SourceCodeManager::SourceCodeManager(std::string& sourceCode) : code{sourceCode}
 }
 
 void SourceCodeManager::printErrorMessage(const std::string& message, const SourceCodeReference& location) const {
-    std::cout << location.line << ":" << location.position << ":  " << message << std::endl;
+    std::cerr << location.line << ":" << location.position << ":  " << message << std::endl;
 
     std::string_view codeview{code};
-    std::cout << codeview.substr(lines[location.line - 1], lines[location.line] - lines[location.line - 1]);
+    std::cerr << codeview.substr(lines[location.line - 1], lines[location.line] - lines[location.line - 1]);
 
     for (size_t i = 1; i < location.position; ++i)
-        std::cout << ' ';
+        std::cerr << ' ';
 
-    std::cout << '^';
+    std::cerr << '^';
 
     for (size_t i = 1; i < location.range; ++i)
-        std::cout << '~';
+        std::cerr << '~';
 
-    std::cout << std::endl;
+    std::cerr << std::endl;
 }
 
 std::string_view SourceCodeManager::getString(const SourceCodeReference &loc) const {

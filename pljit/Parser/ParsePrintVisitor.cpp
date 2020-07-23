@@ -5,7 +5,7 @@ namespace jit {
 void ParsePrintVisitor::visit(const IdentifierNode& node)  {
 
     // Print the label of the node
-    of << index << "[label=\"" << node.id << "\"]\n";
+    of << index << " [label=\"" << node.id << "\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
@@ -17,7 +17,7 @@ void ParsePrintVisitor::visit(const IdentifierNode& node)  {
 void ParsePrintVisitor::visit(const LiteralNode& node) {
 
     // Print the label of the node
-    of << index << "[label=\"" << node.value << "\"]\n";
+    of << index << " [label=\"" << node.value << "\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
@@ -29,7 +29,7 @@ void ParsePrintVisitor::visit(const LiteralNode& node) {
 void ParsePrintVisitor::visit(const GenericTerminalNode& node) {
 
     // Print the label of the node
-    of << index << "[label=\"" << manager.getString(node.location) << "\"]\n";
+    of << index << " [label=\"" << manager.getString(node.location) << "\", style = \"filled\", fillcolor = \"#80aabb\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
@@ -114,7 +114,7 @@ void ParsePrintVisitor::visit(const FuncDeclNode& node) {
     printNonTerminalNode("Function-Decl", node);
 }
 
-void ParsePrintVisitor::printTree(TreeNode& root) {
+void ParsePrintVisitor::printTree(ParseTreeNode& root) {
 
     of.open(filename);
     index = 0;
@@ -131,10 +131,10 @@ void ParsePrintVisitor::printTree(TreeNode& root) {
     of.close();
 }
 
-void ParsePrintVisitor::printNonTerminalNode(std::string label, const NonTerminalTreeNode& node ) {
+void ParsePrintVisitor::printNonTerminalNode(const std::string& label, const NonTerminalTreeNode& node ) {
 
     // Print the label of the node
-    of << index << "[label=\"" << label << "\"]\n";
+    of << index << " [label=\"" << label << "\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())

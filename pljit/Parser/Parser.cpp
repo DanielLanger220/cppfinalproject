@@ -1,9 +1,13 @@
-#include "Parser.h"
+#include "pljit/Parser/Parser.h"
 
 namespace jit {
 
 using namespace std;
 
+using TokenType = Token::TokenType;
+using SeparatorType = Separator::SeparatorType;
+using ArithmeticType = ArithmeticOperator::ArithmeticType;
+using KeywordType = Keyword::KeywordType;
 
 
 std::unique_ptr<IdentifierNode> Parser::parseIdentifier() {
@@ -34,29 +38,34 @@ std::unique_ptr<LiteralNode> Parser::parseLiteral() {
 std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
 
 
-    // get the current token, either from lookahead of parent method or from lexer
-    unique_ptr<Token> currToken = nextToken();
-
     // vector of child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
+
 
     // Check for -> Identifier
-    if (currToken->tokentype == TokenType::Identifier) {
+    unique_ptr<ParseTreeNode> n = parseIdentifier();
 
-        nodes.push_back(make_unique<IdentifierNode>(currToken->location, static_cast<Identifier*>(currToken.get())->id));
-        return make_unique<PrimaryExprNode>(PrimaryExprNode::SubType::Identifier, move(nodes), currToken->location);
+    if (n) {
 
+        nodes.push_back(move(n));
+        return make_unique<PrimaryExprNode>(PrimaryExprNode::SubType::Identifier, move(nodes), nodes[0]->location);
     }
+
     // Check for -> Literal
-    else if (currToken->tokentype == TokenType::Literal) {
+    n = parseLiteral();
+    if (n) {
 
-        nodes.push_back(make_unique<LiteralNode>(currToken->location, static_cast<Literal*>(currToken.get())->value));
-        return make_unique<PrimaryExprNode>(PrimaryExprNode::SubType::Literal, move(nodes), currToken->location);
-
+        nodes.push_back(move(n));
+        return make_unique<PrimaryExprNode>(PrimaryExprNode::SubType::Literal, move(nodes), nodes[0]->location);
     }
+
+
     // Check for -> "("  additive-expr  ")"
-    //else if (checkForOpenPar(currToken.get())) {
-    else if(checkForSeparatorToken(currToken.get()) == SeparatorType::OpenPar) {
+
+    // get the current token, either from lookahead or from lexer
+    auto currToken = nextToken();
+
+    if(checkForSeparatorToken(currToken.get()) == SeparatorType::OpenPar) {
 
          // Push "(" to the child nodes
         nodes.push_back(make_unique<GenericTerminalNode>(currToken->location));
@@ -70,18 +79,18 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr() {
             return nullptr;
 
         // Check for ")"
-        auto n = nextToken();
+        auto tk = nextToken();
 
-        if (n && checkForSeparatorToken(n.get()) == SeparatorType::ClosePar) {
-            nodes.push_back(make_unique<GenericTerminalNode>(n->location));
+        if (tk && checkForSeparatorToken(tk.get()) == SeparatorType::ClosePar) {
+            nodes.push_back(make_unique<GenericTerminalNode>(tk->location));
 
-            size_t range = manager.getabsolutePosition(n->location) + 1 - manager.getabsolutePosition(nodes.front()->location);
+            size_t range = manager.getabsolutePosition(tk->location) + 1 - manager.getabsolutePosition(nodes.front()->location);
             SourceCodeReference ref{nodes.front()->location, range};
             return make_unique<PrimaryExprNode>(PrimaryExprNode::SubType::AdditiveExpr, move(nodes), ref);
 
         }
         else {
-            manager.printErrorMessage("error: ')' expected ...", n->location);
+            manager.printErrorMessage("error: ')' expected ...", tk->location);
             manager.printErrorMessage("... to match this '('", nodes[0]->location);
             return nullptr;
         }
@@ -103,7 +112,7 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr() {
     AdditiveExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
 
     // Vector for child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     if (!multexpr)
         return nullptr;
@@ -148,7 +157,7 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr() {
     MultExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
 
     // Vector for child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     if (!unaryexpr)
         return nullptr;
@@ -187,7 +196,7 @@ std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr() {
     // get the current token, either from lookahead of parent method or from lexer
     unique_ptr<Token> currToken = nextToken();
 
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     UnaryExprNode::SubType subtype{UnaryExprNode::SubType::NoSign};
 
@@ -221,7 +230,7 @@ std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr() {
 
 std::unique_ptr<AssignExprNode> Parser::parseAssignExpr() {
 
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto tk = nextToken();
 
@@ -244,7 +253,7 @@ std::unique_ptr<AssignExprNode> Parser::parseAssignExpr() {
     auto t = checkForArithmeticToken(tk.get());
     if (t != ArithmeticType::VarAssign) {
 
-        manager.printErrorMessage("Error: ':=' expected", tk->location);
+        manager.printErrorMessage("error: ':=' expected", tk->location);
         return nullptr;
     }
 
@@ -269,7 +278,7 @@ std::unique_ptr<AssignExprNode> Parser::parseAssignExpr() {
 std::unique_ptr<Statement> Parser::parseStatement() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     Statement::SubType subtype{Statement::SubType::Assign};
 
@@ -317,7 +326,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
 std::unique_ptr<StatementList> Parser::parseStatementList() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto statement = parseStatement();
 
@@ -357,7 +366,7 @@ std::unique_ptr<StatementList> Parser::parseStatementList() {
 std::unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto tk = nextToken();
 
@@ -382,6 +391,7 @@ std::unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 
     if (!statementlist)
         return nullptr;
+
 
     nodes.push_back(move(statementlist));
 
@@ -418,7 +428,7 @@ std::unique_ptr<InitDeclNode> Parser::parseInitDecl() {
         return nullptr;
 
     // vector of child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     // Check for -> Identifier
     if (currToken->tokentype == TokenType::Identifier) {
@@ -466,7 +476,7 @@ std::unique_ptr<InitDeclNode> Parser::parseInitDecl() {
 std::unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto initdecl = parseInitDecl();
 
@@ -513,7 +523,7 @@ std::unique_ptr<DeclListNode> Parser::parseDeclList() {
         return nullptr;
 
     // vector of child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     // Check for -> Identifier
     if (currToken->tokentype == TokenType::Identifier) {
@@ -561,7 +571,7 @@ std::unique_ptr<DeclListNode> Parser::parseDeclList() {
 std::unique_ptr<ParamDeclNode> Parser::parseParamDecl() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto currToken = nextToken();
 
@@ -616,7 +626,7 @@ std::unique_ptr<ParamDeclNode> Parser::parseParamDecl() {
 std::unique_ptr<VarDeclNode> Parser::parseVarDecl() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto currToken = nextToken();
 
@@ -669,7 +679,7 @@ std::unique_ptr<VarDeclNode> Parser::parseVarDecl() {
 std::unique_ptr<ConstDeclNode> Parser::parseConstDecl() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     auto currToken = nextToken();
 
@@ -724,7 +734,7 @@ std::unique_ptr<ConstDeclNode> Parser::parseConstDecl() {
 std::unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     // Vector for the child nodes
-    vector<unique_ptr<TreeNode>> nodes{};
+    vector<unique_ptr<ParseTreeNode>> nodes{};
 
     bool hasParam{false};
     bool hasVar{false};

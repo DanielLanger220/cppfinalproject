@@ -1,8 +1,13 @@
 #include "Lexer.h"
 
-using namespace std;
 
 namespace jit {
+
+using namespace std;
+
+using SeparatorType = Separator::SeparatorType;
+using ArithmeticType = ArithmeticOperator::ArithmeticType;
+using KeywordType = Keyword::KeywordType;
 
 std::unique_ptr<Token> Lexer::nextToken() {
 

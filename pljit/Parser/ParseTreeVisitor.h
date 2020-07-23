@@ -4,7 +4,7 @@
 
 namespace jit {
 
-class TreeNode;
+class ParseTreeNode;
 class IdentifierNode;
 class LiteralNode;
 class GenericTerminalNode;
