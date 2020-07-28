@@ -17,7 +17,7 @@ class Pljit {
     // Helper methods
 
     // formatSourceCode         Formats the end of the source code so that it has exactly one new-line character at the end
-    void formatSourceCode();
+    void formatSourceCode(std::string &sourcecode);
 };
 
 } // namespace jit

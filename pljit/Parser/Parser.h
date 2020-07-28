@@ -16,17 +16,14 @@ class Parser {
 
     std::unique_ptr<FuncDeclNode> parseFunction();
 
-
-
-
     //private:
     SourceCodeManager manager;
     Lexer lex;
 
 
-    std::unique_ptr<ParamDeclNode> parseParamDecl();
-    std::unique_ptr<VarDeclNode> parseVarDecl();
-    std::unique_ptr<ConstDeclNode> parseConstDecl();
+    std::optional<std::unique_ptr<ParamDeclNode>> parseParamDecl();
+    std::optional<std::unique_ptr<VarDeclNode>> parseVarDecl();
+    std::optional<std::unique_ptr<ConstDeclNode>> parseConstDecl();
 
     std::unique_ptr<DeclListNode> parseDeclList();
     std::unique_ptr<InitDeclNode> parseInitDecl();

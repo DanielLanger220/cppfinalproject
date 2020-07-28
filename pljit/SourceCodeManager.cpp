@@ -2,10 +2,7 @@
 
 namespace jit {
 
-SourceCodeManager::SourceCodeManager(std::string& sourceCode) : code{sourceCode} {
-    char newline = '\n';
-    size_t end = code.find_last_not_of(newline);
-    code.erase(end + 1);
+SourceCodeManager::SourceCodeManager(std::string &sourceCode) : code{sourceCode} {
 
     if (code.empty()) {
         noflines = 0;
@@ -20,7 +17,6 @@ SourceCodeManager::SourceCodeManager(std::string& sourceCode) : code{sourceCode}
     while (pos < code.size()) {
         pos = code.find('\n', pos + 1);
         if (pos == std::string::npos) {
-            code.push_back('\n');
             lines.push_back(code.size());
             return;
         }

@@ -52,8 +52,6 @@ void AstPrintVisitor::visit(const AstUnaryArithmeticExpression& node) {
 
 void AstPrintVisitor::visit(const AstBinaryArithmeticExpression& node) {
 
-    // Print the label of the node
-
     char op;
 
     switch(node.op) {
@@ -134,6 +132,35 @@ void AstPrintVisitor::visit(const AstAssignment& node) {
 
 }
 
+void AstPrintVisitor::printFunction(AstFunction& root) {
+
+    of.open(filename);
+    index = 1;
+    indexstack.clear();
+    indexstack.push_back(0);
+
+    // Print header of .dot file
+    of << "digraph {\n\n";
+    of << "0 [label = \"Function\"]\n";
+
+    // Print the nodes and edges of the parse tree with the given node as root
+    for (auto &s : root.statements)
+        s->accept(*this);
+
+
+    // Print tail of .dot file
+    of << "}\n";
+
+    of.close();
+
+
+}
+
+
+// *********************************************************************************************************************
+// The following methods were written for test purposes and are not necessary for the final functionality of the class
+// *********************************************************************************************************************
+
 void AstPrintVisitor::printExpression(AstArithmeticExpression& root) {
 
     of.open(filename);
@@ -170,29 +197,7 @@ void AstPrintVisitor::printStatement(AstStatement& root) {
 
 }
 
-void AstPrintVisitor::printFunction(AstFunction& root) {
 
-    of.open(filename);
-    index = 1;
-    indexstack.clear();
-    indexstack.push_back(0);
-
-    // Print header of .dot file
-    of << "digraph {\n\n";
-    of << "0 [label = \"Function\"]\n";
-
-    // Print the nodes and edges of the parse tree with the given node as root
-    for (auto &s : root.statements)
-        s->accept(*this);
-
-
-    // Print tail of .dot file
-    of << "}\n";
-
-    of.close();
-
-
-}
 
 
 } // namespace jit

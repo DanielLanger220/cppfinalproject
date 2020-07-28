@@ -17,13 +17,10 @@ class AstPrintVisitor : public AstVisitor {
     // Constructor          Initializes an object with a specified filename for the output and a corresponding SourceCodeManager
     explicit AstPrintVisitor(std::string filename, SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
-    // printTree            Prints the parse tree defined by the given node a root
-    //void printTree(AstFunction root);
-
-    void printExpression(AstArithmeticExpression& root);
-    void printStatement(AstStatement& root);
+    // printFunction        Prints the tree representation of the function given as AstFunction object in *.dot format to the specified file
     void printFunction(AstFunction& root);
 
+    // The visit methods to support the visitor pattern
     void visit(const AstLiteral& node) override;
     void visit(const AstIdentifier& node) override ;
     void visit(const AstUnaryArithmeticExpression& node) override ;
@@ -39,6 +36,10 @@ class AstPrintVisitor : public AstVisitor {
     SourceCodeManager& manager;         // The corresponding SourceCodeManager
     std::vector<size_t> indexstack{};   // Stack that is used for a correct indexing of the nodes
 
+
+    // Methods used to test the implementation, not necessary for the final functionality
+    void printExpression(AstArithmeticExpression& root);
+    void printStatement(AstStatement& root);
 
 };
 

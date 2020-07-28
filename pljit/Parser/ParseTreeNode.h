@@ -38,7 +38,7 @@ class ParseTreeNode {
     };
 
     // Constructor
-    ParseTreeNode(Type nodetype, SourceCodeReference location) : nodetype{nodetype}, location{location} {}
+    ParseTreeNode(SourceCodeReference location, Type nodetype) : location{location}, nodetype{nodetype} {}
 
     // Destructor
     virtual ~ParseTreeNode() = default;
@@ -46,8 +46,9 @@ class ParseTreeNode {
     // accept               accept method for the visitor pattern
     virtual void accept(ParseTreeVisitor& visitor) const = 0;
 
-    const Type nodetype;                    // Specifies the type of the parse tree node
     const SourceCodeReference location;     // Reference to the location in source code
+    const Type nodetype;                    // Specifies the type of the parse tree node
+
 
 };
 
@@ -55,7 +56,7 @@ class ParseTreeNode {
 class NonTerminalTreeNode : public ParseTreeNode {
 
     public:
-    NonTerminalTreeNode(Type nodetype, SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : ParseTreeNode{nodetype, location}, nodes{std::move(nodes)} {}
+    NonTerminalTreeNode(SourceCodeReference location, Type nodetype, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : ParseTreeNode{location, nodetype}, nodes{std::move(nodes)} {}
 
     std::vector<std::unique_ptr<ParseTreeNode>> nodes{};
 };
@@ -66,12 +67,10 @@ class IdentifierNode : public ParseTreeNode {
     public:
 
     // Constructor
-    IdentifierNode(SourceCodeReference location, std::string_view id) : ParseTreeNode{ParseTreeNode::Type::Identifier, location}, id{id} {}
+    explicit IdentifierNode(SourceCodeReference location) : ParseTreeNode{location, ParseTreeNode::Type::Identifier} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
-    std::string_view id;
 
 };
 
@@ -80,7 +79,7 @@ class LiteralNode : public ParseTreeNode {
     public:
 
     // Constructor
-    LiteralNode(SourceCodeReference location, int64_t value) : ParseTreeNode{ParseTreeNode::Type::Literal, location}, value{value} {}
+    LiteralNode(SourceCodeReference location, int64_t value) : ParseTreeNode{location, ParseTreeNode::Type::Literal}, value{value} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -102,11 +101,12 @@ class GenericTerminalNode : public ParseTreeNode {
     };
 
     // Constructor
-    explicit GenericTerminalNode(SourceCodeReference location) : ParseTreeNode{ParseTreeNode::Type::GenericTerminal, location} {}
+    explicit GenericTerminalNode(SourceCodeReference location, SubType subtype) : ParseTreeNode{location, ParseTreeNode::Type::GenericTerminal}, subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
+    const SubType subtype;
 };
 
 
@@ -121,7 +121,7 @@ class PrimaryExprNode : public NonTerminalTreeNode {
     };
 
     // Constructor
-    PrimaryExprNode(SubType subtype, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::PrimaryExpr, location, std::move(nodes)},
+    PrimaryExprNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SubType subtype) : NonTerminalTreeNode{location, ParseTreeNode::Type::PrimaryExpr, std::move(nodes)},
                                                                                                                    subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
@@ -141,7 +141,7 @@ class UnaryExprNode : public NonTerminalTreeNode {
         NoSign
     };
 
-    UnaryExprNode(SubType subtype, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::UnaryExpr, location, std::move(nodes)},
+    UnaryExprNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SubType subtype) : NonTerminalTreeNode{location, ParseTreeNode::Type::UnaryExpr, std::move(nodes)},
                                                                                                            subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
@@ -161,7 +161,7 @@ class MultExprNode : public NonTerminalTreeNode {
     };
 
     // Constructor
-    MultExprNode(SubType subtype, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::MultExpr, location, std::move(nodes)},
+    MultExprNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SubType subtype) : NonTerminalTreeNode{location, ParseTreeNode::Type::MultExpr, std::move(nodes)},
                                                                                                                 subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
@@ -182,7 +182,7 @@ class AdditiveExprNode : public NonTerminalTreeNode {
     };
 
     // Constructor
-    AdditiveExprNode(SubType subtype, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::AdditiveExpr, location, std::move(nodes)},
+    AdditiveExprNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SubType subtype) : NonTerminalTreeNode{location, ParseTreeNode::Type::AdditiveExpr, std::move(nodes)},
                                                                                                                    subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
@@ -196,7 +196,7 @@ class AssignExprNode : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    AssignExprNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::AssignExpr, location, std::move(nodes)} {}
+    AssignExprNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::AssignExpr, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -212,7 +212,7 @@ class Statement : public NonTerminalTreeNode {
     };
 
     // Constructor
-    Statement(SubType subtype, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::Statement, location, std::move(nodes)},
+    Statement(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, SubType subtype) : NonTerminalTreeNode{location, ParseTreeNode::Type::Statement, std::move(nodes)},
                                                                                                              subtype{subtype} {}
 
     // accept               accept method for the visitor pattern
@@ -226,7 +226,7 @@ class StatementList : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    StatementList(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::StatementList, location, std::move(nodes)} {}
+    StatementList(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::StatementList, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -237,7 +237,7 @@ class CompoundStatement : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    CompoundStatement(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::CompundStatement, location, std::move(nodes)} {}
+    CompoundStatement(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::CompundStatement, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -248,8 +248,7 @@ class ParamDeclNode : public NonTerminalTreeNode {
 
     public:
 
-    ParamDeclNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
-
+    ParamDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -259,7 +258,7 @@ class VarDeclNode : public NonTerminalTreeNode {
 
     public:
 
-    VarDeclNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
+    VarDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -269,7 +268,7 @@ class ConstDeclNode : public NonTerminalTreeNode {
 
     public:
 
-    ConstDeclNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
+    ConstDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -280,7 +279,7 @@ class DeclListNode : public NonTerminalTreeNode {
 
     public:
 
-    DeclListNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
+    DeclListNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
 
     // accept               accept method for the visitor pattern
@@ -292,7 +291,7 @@ class InitDeclNode : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    InitDeclNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
+    InitDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -305,7 +304,7 @@ class InitDeclListNode : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    InitDeclListNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)} {}
+    InitDeclListNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
@@ -320,7 +319,7 @@ class FuncDeclNode : public NonTerminalTreeNode {
     public:
 
     // Constructor
-    FuncDeclNode(std::vector<std::unique_ptr<ParseTreeNode>> nodes, bool hasParam, bool hasVar, bool hasConst, SourceCodeReference location) : NonTerminalTreeNode{ParseTreeNode::Type::InitDecl, location, std::move(nodes)},
+    FuncDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, bool hasParam, bool hasVar, bool hasConst) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)},
                                                                                                                                           hasParamDecl{hasParam}, hasVarDecl{hasVar}, hasConstDecl{hasConst}{}
     const ParamDeclNode* getParameterDeclarations() const;
     const VarDeclNode* getVariableDeclarations() const;

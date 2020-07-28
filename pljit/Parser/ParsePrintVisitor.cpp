@@ -5,7 +5,7 @@ namespace jit {
 void ParsePrintVisitor::visit(const IdentifierNode& node)  {
 
     // Print the label of the node
-    of << index << " [label=\"" << node.id << "\"]\n";
+    of << index << " [label=\"" << manager.getString(node.location) << "\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())

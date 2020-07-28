@@ -16,9 +16,9 @@ class SemanticAnalyzer {
     SemanticAnalyzer(SourceCodeManager& manager, FuncDeclNode& function) : manager{manager}, function{function} {}
 
     bool createTables();
-    std::unique_ptr<AstFunction> analyseFunction(const FuncDeclNode& function);
+    std::unique_ptr<AstFunction> analyseFunction();
 
-    //private:
+    private:
 
     std::unique_ptr<AstArithmeticExpression> analyzeExpression(const ParseTreeNode& expression);
     std::unique_ptr<AstStatement> analyzeStatement(const Statement& statement);
@@ -30,8 +30,8 @@ class SemanticAnalyzer {
     std::unique_ptr<AstAssignment> analyzeAssignment(const AssignExprNode& expr);
 
 
-    SourceCodeManager& manager;
-    FuncDeclNode& function;
+    const SourceCodeManager& manager;
+    const FuncDeclNode& function;
 
     SymbolTable table;
     std::map<std::string_view, size_t> nametable{};

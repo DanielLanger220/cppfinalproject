@@ -41,7 +41,6 @@ bool SemanticAnalyzer::createTables() {
 
             ++index;
         }
-
     }
 
     // Read the Variables
@@ -70,8 +69,6 @@ bool SemanticAnalyzer::createTables() {
 
             ++index;
         }
-
-
     }
 
     // Read the Constants
@@ -101,24 +98,9 @@ bool SemanticAnalyzer::createTables() {
             table.insertEntry(index, identifier.location, true, true, literal.value);
             nametable.insert(pair<string_view, size_t>(manager.getString(identifier.location), index));
 
-
             ++index;
         }
-
-
     }
-
-
-    cout << index << " Identifers erkannt!\n";
-
-    for(auto t : table.table)
-    {
-        cout << manager.getString(t.declaration) << "\t\t\t" << t.isConst << " " << t.hasValue << " " << t.value << endl;
-    }
-
-
-    for(auto t : nametable)
-        cout << t.first << "\t\t\t" << t.second << endl;
 
     return true;
 }
@@ -136,8 +118,6 @@ std::unique_ptr<AstIdentifier> SemanticAnalyzer::analyseIdentifier(const Identif
     }
 
     size_t index = nametable[manager.getString(id.location)];
-
-    cout << "Check identifier\t" << manager.getString(id.location) << "\t" << lhs << endl;
 
     // If identifier appears on the left hand side, check if it is non-constant
     if (lhs && table.isConst(index)) {
@@ -190,6 +170,9 @@ std::unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(con
                 return analyzeExpression(*unaryexpr.nodes[0]);
             else {
                 auto subexpr = analyzeExpression(*unaryexpr.nodes[1]);
+                if (!subexpr)
+                    return nullptr;
+
                 return make_unique<AstUnaryArithmeticExpression>(unaryexpr.location, move(subexpr));
             }
         }
@@ -201,9 +184,23 @@ std::unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(con
                 return analyzeExpression(*multexpr.nodes[0]);
             else {
                 auto lhs = analyzeExpression(*multexpr.nodes[0]);
+                if (!lhs)
+                    return nullptr;
+
                 auto rhs = analyzeExpression(*multexpr.nodes[2]);
-                //TODO: Add arithmetic operations to Generic Terminal node and correct the following line
-                return make_unique<AstBinaryArithmeticExpression>(multexpr.location, move(lhs), move(rhs), AstBinaryArithmeticExpression::ArithmeticOperation::Mul);
+                if (!rhs)
+                    return nullptr;
+
+                auto op = static_cast<GenericTerminalNode&>(*multexpr.nodes[1]).subtype;
+
+                assert(op == GenericTerminalNode::SubType::Mul || op == GenericTerminalNode::SubType::Div);
+
+                auto astop = AstBinaryArithmeticExpression::ArithmeticOperation::Mul;
+
+                if (op == GenericTerminalNode::SubType::Div)
+                    astop = AstBinaryArithmeticExpression::ArithmeticOperation::Div;
+
+                return make_unique<AstBinaryArithmeticExpression>(multexpr.location, move(lhs), move(rhs), astop);
             }
         }
         case ParseTreeNode::Type::AdditiveExpr: {
@@ -214,9 +211,24 @@ std::unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(con
                 return analyzeExpression(*addexpr.nodes[0]);
             else {
                 auto lhs = analyzeExpression(*addexpr.nodes[0]);
+                if (!lhs)
+                    return nullptr;
+
                 auto rhs = analyzeExpression(*addexpr.nodes[2]);
-                //TODO: Add arithmetic operations to Generic Terminal node and correct the following line
-                return make_unique<AstBinaryArithmeticExpression>(addexpr.location, move(lhs), move(rhs), AstBinaryArithmeticExpression::ArithmeticOperation::Plus);
+                if(!rhs)
+                    return nullptr;
+
+
+                auto op = static_cast<GenericTerminalNode&>(*addexpr.nodes[1]).subtype;
+
+                assert(op == GenericTerminalNode::SubType::Plus || op == GenericTerminalNode::SubType::Minus);
+
+                auto astop = AstBinaryArithmeticExpression::ArithmeticOperation::Plus;
+
+                if (op == GenericTerminalNode::SubType::Minus)
+                    astop = AstBinaryArithmeticExpression::ArithmeticOperation::Minus;
+
+                return make_unique<AstBinaryArithmeticExpression>(addexpr.location, move(lhs), move(rhs), astop);
             }
         }
         default:
@@ -261,16 +273,17 @@ std::unique_ptr<AstAssignment> SemanticAnalyzer::analyzeAssignment(const AssignE
     return make_unique<AstAssignment>(expr.location, move(id), move(addexpr));
 }
 
-std::unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction(const FuncDeclNode& function) {
+std::unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
 
 
-    //TODO: Perhaps initialise the tables here
+    // Initialise the symbol table and the name-lookup table
+    if (!createTables())
+        return nullptr;
 
     bool hasreturn{false};
 
     // Vector to store the statements of the AstFunction object
     vector<unique_ptr<AstStatement>> aststatements{};
-
 
     const StatementList* statementlist = function.getStatements();
 
