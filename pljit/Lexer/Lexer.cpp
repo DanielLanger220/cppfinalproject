@@ -23,7 +23,10 @@ std::unique_ptr<Token> Lexer::nextToken() {
     }
 
     if (currAbsPos == code.end())
+    {
+        cerr << "error: end of file reached during parsing\n";
         return nullptr;
+    }
 
     // The resulting token
     std::unique_ptr<Token> res;
@@ -68,9 +71,13 @@ std::unique_ptr<Token> Lexer::nextToken() {
             res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::End);
         else if (tk == "RETURN")
             res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Ret);
-        else
-            res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), tk);
-
+        else {
+            auto r = nametable.insert(pair<string_view,size_t>(tk, nofidentifiers));
+            if (r.second)
+                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), nofidentifiers++);
+            else
+                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), r.first->second);
+        }
         currAbsPos += n;
         currPos += n;
         return res;
@@ -129,7 +136,7 @@ std::unique_ptr<Token> Lexer::nextToken() {
         ++currAbsPos;
         return res;
     } else if (*currAbsPos == ':') {
-        if (*(currAbsPos + 1) == '=') {
+        if (currAbsPos < code.end() && *(currAbsPos + 1) == '=') {
             res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos, 2), ArithmeticType::VarAssign);
             currPos += 2;
             currAbsPos += 2;

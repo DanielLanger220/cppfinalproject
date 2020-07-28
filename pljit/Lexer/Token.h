@@ -43,14 +43,16 @@ class Keyword : public Token {
     Keyword(SourceCodeReference loc, KeywordType type) : Token{loc, TokenType::Keyword}, keywordtype{type} {}
 
     const KeywordType keywordtype; // Specifies the keyword
+
+    static std::string toString(KeywordType t);
 };
 
 class Identifier : public Token {
     public:
 
-    Identifier(SourceCodeReference loc, std::string_view id) : Token{loc, TokenType::Identifier}, id{id} {}
+    Identifier(SourceCodeReference loc, size_t index) : Token{loc, TokenType::Identifier}, index{index} {}
 
-    std::string_view id;
+    const size_t index;
 };
 
 class Literal : public Token {
@@ -79,6 +81,8 @@ class ArithmeticOperator : public Token {
     ArithmeticOperator(SourceCodeReference loc, ArithmeticType type) : Token{loc, TokenType::ArithmeticOperator}, arithmetictype{type} {}
 
     const ArithmeticType arithmetictype;
+
+    static std::string toString(ArithmeticType t);
 };
 
 class Separator : public Token {
@@ -96,6 +100,8 @@ class Separator : public Token {
     Separator(SourceCodeReference loc, SeparatorType type) : Token{loc, TokenType::Separator}, separatortype{type} {}
 
     const SeparatorType separatortype;
+
+    static std::string toString(SeparatorType t);
 };
 
 } // namespace jit

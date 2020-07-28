@@ -1,6 +1,6 @@
 set(PLJIT_SOURCES
         main.cpp
-        SourceCodeManager.cpp SourceCodeManager.h Lexer/Lexer.cpp Lexer/Lexer.h Lexer/Token.h Pljit.cpp Pljit.h Parser/ParseTreeNode.h Parser/Parser.cpp Parser/Parser.h Parser/ParseTreeVisitor.h Parser/ParsePrintVisitor.cpp Parser/ParsePrintVisitor.h SemanticAnalysis/AstNode.h SemanticAnalysis/SymbolTable.cpp SemanticAnalysis/SymbolTable.h SemanticAnalysis/SemanticAnalyzer.cpp SemanticAnalysis/SemanticAnalyzer.h SemanticAnalysis/AstVisitor.h Parser/ParseTreeNode.cpp SemanticAnalysis/AstPrintVisitor.cpp SemanticAnalysis/AstPrintVisitor.h)
+        SourceCodeManager.cpp SourceCodeManager.h Lexer/Lexer.cpp Lexer/Lexer.h Lexer/Token.h Pljit.cpp Pljit.h Parser/ParseTreeNode.h Parser/Parser.cpp Parser/Parser.h Parser/ParseTreeVisitor.h Parser/ParsePrintVisitor.cpp Parser/ParsePrintVisitor.h SemanticAnalysis/AstNode.h SemanticAnalysis/SymbolTable.cpp SemanticAnalysis/SymbolTable.h SemanticAnalysis/SemanticAnalyzer.cpp SemanticAnalysis/SemanticAnalyzer.h SemanticAnalysis/AstVisitor.h Parser/ParseTreeNode.cpp SemanticAnalysis/AstPrintVisitor.cpp SemanticAnalysis/AstPrintVisitor.h Lexer/Token.cpp)
 
 add_library(pljit_core ${PLJIT_SOURCES})
 target_include_directories(pljit_core PUBLIC ${CMAKE_SOURCE_DIR})

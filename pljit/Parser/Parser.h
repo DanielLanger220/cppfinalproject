@@ -21,28 +21,39 @@ class Parser {
     Lexer lex;
 
 
+    // Parser methods to parse Separator-, Keyword- and ArithemticOperator token. The methods check if the next token matches the token given as parameter.
+    // The mandatory-flag indicates whether the token is mandatory or optional at that positon
+    std::unique_ptr<GenericTerminalNode> parseSeparator(Separator::SeparatorType t, bool mandatory = false);
+    std::unique_ptr<GenericTerminalNode> parseKeyword(Keyword::KeywordType t, bool mandatory = false);
+    std::unique_ptr<GenericTerminalNode> parseArithmeticOperator(ArithmeticOperator::ArithmeticType t, bool mandatory = false);
+
+    // Parser methods to parse an identifier and a literal with a flag indicating whether the token is mandatory or optional
+    std::unique_ptr<IdentifierNode> parseIdentifier(bool mandatory = false);
+    std::unique_ptr<LiteralNode> parseLiteral(bool mandatory = false);
+
+    // Parser methods for the arithmetic expressions with a flag indicating whether the expression is mandatory or optional
+    std::unique_ptr<PrimaryExprNode> parsePrimaryExpr(bool mandatory = false);
+    std::unique_ptr<UnaryExprNode> parseUnaryExpr(bool mandatory = false);
+    std::unique_ptr<MultExprNode> parseMultExpr(bool mandatory = false);
+    std::unique_ptr<AdditiveExprNode> parseAdditiveExpr(bool mandatory = false);
+
+    // parseAssignExpr          Parses an assignment expression with flag indicating whether the expression is mandatory or optional
+    std::unique_ptr<AssignExprNode> parseAssignExpr(bool mandatory = false);
+
+    // Parser methods to parse the statements and the compound statement
+    std::unique_ptr<Statement> parseStatement();
+    std::unique_ptr<StatementList> parseStatementList();
+    std::unique_ptr<CompoundStatement> parseCompoundStatement();
+
+    // Parser methods to parse the declaration- and initialisation lists for the declarations
+    std::unique_ptr<InitDeclNode> parseInitDecl();
+    std::unique_ptr<DeclListNode> parseDeclList();
+    std::unique_ptr<InitDeclListNode> parseInitDeclList();
+
+    // Parser methods to parse the declarations of the parameters, variables and constants
     std::optional<std::unique_ptr<ParamDeclNode>> parseParamDecl();
     std::optional<std::unique_ptr<VarDeclNode>> parseVarDecl();
     std::optional<std::unique_ptr<ConstDeclNode>> parseConstDecl();
-
-    std::unique_ptr<DeclListNode> parseDeclList();
-    std::unique_ptr<InitDeclNode> parseInitDecl();
-    std::unique_ptr<InitDeclListNode> parseInitDeclList();
-
-    std::unique_ptr<CompoundStatement> parseCompoundStatement();
-    std::unique_ptr<StatementList> parseStatementList();
-    std::unique_ptr<Statement> parseStatement();
-    std::unique_ptr<AssignExprNode> parseAssignExpr();
-
-    std::unique_ptr<AdditiveExprNode> parseAdditiveExpr();
-    std::unique_ptr<MultExprNode> parseMultExpr();
-    std::unique_ptr<UnaryExprNode> parseUnaryExpr();
-    std::unique_ptr<PrimaryExprNode> parsePrimaryExpr();
-
-    std::unique_ptr<IdentifierNode> parseIdentifier();
-    std::unique_ptr<LiteralNode> parseLiteral();
-
-
 
     private:
 
@@ -50,16 +61,8 @@ class Parser {
     // from a non-terminal symbol which yields in a false alternative
     std::unique_ptr<Token> lookaheadToken{ nullptr};
 
-
-    // Helper methods
-
     // nextToken                If the lookahead token is filled with a token, returns this token, otherwise takes the next token from the lexer
     std::unique_ptr<Token> nextToken() { return lookaheadToken ? std::move(lookaheadToken) : lex.nextToken();}
-
-
-    static std::optional<Keyword::KeywordType> checkForKeywordToken(const Token* tk);
-    static std::optional<ArithmeticOperator::ArithmeticType> checkForArithmeticToken(const Token* tk);
-    static std::optional<Separator::SeparatorType> checkForSeparatorToken(const Token* tk);
 
 };
 
