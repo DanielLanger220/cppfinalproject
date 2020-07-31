@@ -87,24 +87,26 @@ unique_ptr<GenericTerminalNode> Parser::parseArithmeticOperator(ArithmeticType t
     return make_unique<GenericTerminalNode>(currToken->location, generictype);
 }
 
-std::unique_ptr<IdentifierNode> Parser::parseIdentifier(bool mandatory) {
+unique_ptr<IdentifierNode> Parser::parseIdentifier(bool mandatory) {
 
     auto currToken = nextToken();
 
     if (!currToken)
         return nullptr;
 
-    if (currToken->tokentype == TokenType::Identifier)
-        return make_unique<IdentifierNode>(currToken->location);
+    if (currToken->tokentype == TokenType::Identifier) {
+        cout << "Identifier parsed: " << manager.getString(currToken->location) << "\t\t" << static_cast<Identifier&>(*currToken).index << endl;
+        return make_unique<IdentifierNode>(currToken->location, static_cast<Identifier&>(*currToken).index);}
     else {
         if (mandatory)
             manager.printErrorMessage("error: identifier expected", currToken->location);
+
         lookaheadToken = move(currToken);
         return nullptr;
     }
 }
 
-std::unique_ptr<LiteralNode> Parser::parseLiteral(bool mandatory) {
+unique_ptr<LiteralNode> Parser::parseLiteral(bool mandatory) {
 
     auto currToken = nextToken();
 
@@ -116,13 +118,14 @@ std::unique_ptr<LiteralNode> Parser::parseLiteral(bool mandatory) {
     else {
         if(mandatory)
             manager.printErrorMessage("error: literal expected", currToken->location);
+
         lookaheadToken = move(currToken);
         return nullptr;
     }
 
 }
 
-std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
+unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
 
 
     // vector of child nodes
@@ -155,12 +158,10 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
         nodes.push_back(move(n));
 
         // Parse the additive expression (mandatory expression because of the open '(' )
-        auto addexpr = parseAdditiveExpr(true);
-
-        if (addexpr)
-            nodes.push_back(move(addexpr));
-        else
+        if (!(n = parseAdditiveExpr(true)))
             return nullptr;
+
+       nodes.push_back(move(n));
 
         // Check for ")"
         n = parseSeparator(SeparatorType::ClosePar, true);
@@ -189,7 +190,7 @@ std::unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
 }
 
 
-std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr(bool mandatory) {
+unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr(bool mandatory) {
 
 
     AdditiveExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
@@ -197,71 +198,69 @@ std::unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr(bool mandatory) {
     // Vector for child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
-    // Parse multiplicative expression
-    auto multexpr = parseMultExpr(mandatory);
 
-
-    if (!multexpr)
-        return nullptr;
-    else
-        nodes.push_back(move(multexpr));
-
-
-    // Check or optional (+|-) add-expr
     unique_ptr<ParseTreeNode> n;
 
+    // Parse multiplicative expression
+    if (!(n = parseMultExpr(mandatory)))
+        return nullptr;
+
+    nodes.push_back(move(n));
+
+    // Check or optional (+|-) add-expr
     if ((n = parseArithmeticOperator(ArithmeticType::Plus)) || (n = parseArithmeticOperator(ArithmeticType::Minus))) {
 
+        // push the '+' or '-' to the child vector
         nodes.push_back(move(n));
 
-        n = parseAdditiveExpr(true);
-
-        if (!n)
+        // parse the following mandatory additive expression
+        if (!(n = parseAdditiveExpr(true)))
             return nullptr;
 
-        subtype = AdditiveExprNode::SubType::Binary;
+        // push the additive expression to the child vector
         nodes.push_back(move(n));
+
+        // the additive expression is binary (... (+|-) ...)
+        subtype = AdditiveExprNode::SubType::Binary;
     }
 
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
     return make_unique<AdditiveExprNode>(ref, move(nodes), subtype) ;
-
 }
 
 
-std::unique_ptr<MultExprNode> Parser::parseMultExpr(bool mandatory) {
+unique_ptr<MultExprNode> Parser::parseMultExpr(bool mandatory) {
 
 
-    MultExprNode::SubType subtype {AdditiveExprNode::SubType::Unary};
+    MultExprNode::SubType subtype {MultExprNode::SubType::Unary};
 
     // Vector for child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
-    // Parse unary expression
-    auto unaryexpr = parseUnaryExpr(mandatory);
-
-    if (!unaryexpr)
-        return nullptr;
-    else
-        nodes.push_back(move(unaryexpr));
-
-
-    // Check for optional (*|/) mult-expr
     unique_ptr<ParseTreeNode> n;
 
+    // Parse unary expression
+    if (!(n = parseUnaryExpr(mandatory)))
+        return nullptr;
+
+    nodes.push_back(move(n));
+
+    // Check for optional (*|/) mult-expr
     if((n = parseArithmeticOperator(ArithmeticType::Mul)) || (n = parseArithmeticOperator(ArithmeticType::Div))) {
 
+        // push the '*' or '/' to the child vector
         nodes.push_back(move(n));
 
-        n = parseMultExpr(true);
-
-        if (!n)
+        if (!(n = parseMultExpr(true)))
             return nullptr;
 
-        subtype = MultExprNode::SubType::Binary;
+        // push the multiplicative expression to the child vector
         nodes.push_back(move(n));
+
+        // the multiplicative expression is binary (... (*|/) ...)
+        subtype = MultExprNode::SubType::Binary;
 
     }
 
@@ -271,7 +270,7 @@ std::unique_ptr<MultExprNode> Parser::parseMultExpr(bool mandatory) {
     return make_unique<MultExprNode>(ref, move(nodes), subtype);
 }
 
-std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr(bool mandatory) {
+unique_ptr<UnaryExprNode> Parser::parseUnaryExpr(bool mandatory) {
 
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
@@ -308,7 +307,7 @@ std::unique_ptr<UnaryExprNode> Parser::parseUnaryExpr(bool mandatory) {
 }
 
 
-std::unique_ptr<AssignExprNode> Parser::parseAssignExpr(bool mandatory) {
+unique_ptr<AssignExprNode> Parser::parseAssignExpr(bool mandatory) {
 
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
@@ -340,7 +339,7 @@ std::unique_ptr<AssignExprNode> Parser::parseAssignExpr(bool mandatory) {
 }
 
 
-std::unique_ptr<Statement> Parser::parseStatement() {
+unique_ptr<Statement> Parser::parseStatement() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -376,7 +375,7 @@ std::unique_ptr<Statement> Parser::parseStatement() {
     return make_unique<Statement>(ref, move(nodes), subtype);
 }
 
-std::unique_ptr<StatementList> Parser::parseStatementList() {
+unique_ptr<StatementList> Parser::parseStatementList() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -407,7 +406,7 @@ std::unique_ptr<StatementList> Parser::parseStatementList() {
 }
 
 
-std::unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
+unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -439,7 +438,7 @@ std::unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 }
 
 
-std::unique_ptr<InitDeclNode> Parser::parseInitDecl() {
+unique_ptr<InitDeclNode> Parser::parseInitDecl() {
 
     // vector of child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -470,11 +469,11 @@ std::unique_ptr<InitDeclNode> Parser::parseInitDecl() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    return make_unique<InitDeclNode>(ref, std::move(nodes));
+    return make_unique<InitDeclNode>(ref, move(nodes));
 }
 
 
-std::unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
+unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -504,7 +503,7 @@ std::unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
     return make_unique<InitDeclListNode>(ref, move(nodes));
 }
 
-std::unique_ptr<DeclListNode> Parser::parseDeclList() {
+unique_ptr<DeclListNode> Parser::parseDeclList() {
 
     // vector of child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -535,7 +534,7 @@ std::unique_ptr<DeclListNode> Parser::parseDeclList() {
 }
 
 
-optional<std::unique_ptr<ParamDeclNode>> Parser::parseParamDecl() {
+optional<unique_ptr<ParamDeclNode>> Parser::parseParamDecl() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -567,7 +566,7 @@ optional<std::unique_ptr<ParamDeclNode>> Parser::parseParamDecl() {
     return make_unique<ParamDeclNode>(ref, move(nodes));
 }
 
-optional<std::unique_ptr<VarDeclNode>> Parser::parseVarDecl() {
+optional<unique_ptr<VarDeclNode>> Parser::parseVarDecl() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -599,7 +598,7 @@ optional<std::unique_ptr<VarDeclNode>> Parser::parseVarDecl() {
     return make_unique<VarDeclNode>(ref, move(nodes));
 }
 
-optional<std::unique_ptr<ConstDeclNode>> Parser::parseConstDecl() {
+optional<unique_ptr<ConstDeclNode>> Parser::parseConstDecl() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
@@ -632,7 +631,7 @@ optional<std::unique_ptr<ConstDeclNode>> Parser::parseConstDecl() {
 }
 
 
-std::unique_ptr<FuncDeclNode> Parser::parseFunction() {
+unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     // Vector for the child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};

@@ -1,5 +1,7 @@
 #include "ParsePrintVisitor.h"
 
+using namespace std;
+
 namespace jit {
 
 void ParsePrintVisitor::visit(const IdentifierNode& node)  {
@@ -131,7 +133,7 @@ void ParsePrintVisitor::printTree(ParseTreeNode& root) {
     of.close();
 }
 
-void ParsePrintVisitor::printNonTerminalNode(const std::string& label, const NonTerminalTreeNode& node ) {
+void ParsePrintVisitor::printNonTerminalNode(const string& label, const NonTerminalTreeNode& node ) {
 
     // Print the label of the node
     of << index << " [label=\"" << label << "\"]\n";

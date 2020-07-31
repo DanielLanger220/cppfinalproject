@@ -12,9 +12,7 @@ void SymbolTable::insertEntry(size_t index, SourceCodeReference declaration, boo
     table.emplace_back(TableEntry{declaration, isConst, hasValue, value });
 }
 
-
 int64_t SymbolTable::getValue(size_t index) const {
-
 
     assert(index < table.size());
 

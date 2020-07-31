@@ -1,14 +1,16 @@
 #include "Pljit.h"
 
+using namespace std;
+
 namespace jit {
 
-int Pljit::registerFunction(std::string sourceCode) {
-    vecSourceCode.push_back(std::move(sourceCode));
+int Pljit::registerFunction(string sourceCode) {
+    vecSourceCode.push_back(move(sourceCode));
     return 0;
 }
 
 
-void Pljit::formatSourceCode(std::string& sourcecode) {
+void Pljit::formatSourceCode(string& sourcecode) {
 
     // Remove leading and trailing newlines and add exactly one newline at the end of the code
     char newline = '\n';

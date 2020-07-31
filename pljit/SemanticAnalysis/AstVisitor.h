@@ -26,4 +26,5 @@ class AstVisitor {
 };
 
 } // namespace jit
+
 #endif //PLJIT_ASTVISITOR_H

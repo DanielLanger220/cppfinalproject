@@ -9,7 +9,7 @@ using SeparatorType = Separator::SeparatorType;
 using ArithmeticType = ArithmeticOperator::ArithmeticType;
 using KeywordType = Keyword::KeywordType;
 
-std::unique_ptr<Token> Lexer::nextToken() {
+unique_ptr<Token> Lexer::nextToken() {
 
     // move lexer position to the beginning of the next token (i.e. skip all whitespaces)
     while (isspace(*currAbsPos)) {
@@ -29,7 +29,7 @@ std::unique_ptr<Token> Lexer::nextToken() {
     }
 
     // The resulting token
-    std::unique_ptr<Token> res;
+    unique_ptr<Token> res;
 
     // Check for literal
     if (isdigit(*currAbsPos)) {

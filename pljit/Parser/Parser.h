@@ -14,6 +14,7 @@ class Parser {
 
     explicit Parser(std::string& sourcecode) : manager{sourcecode}, lex{sourcecode, manager} {}
 
+    // parseFunction                Parses the source code and, if successfull, returns a pointer to the root node of the created parse tree
     std::unique_ptr<FuncDeclNode> parseFunction();
 
     //private:

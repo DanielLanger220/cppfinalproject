@@ -61,17 +61,18 @@ class NonTerminalTreeNode : public ParseTreeNode {
     std::vector<std::unique_ptr<ParseTreeNode>> nodes{};
 };
 
-
+//
 class IdentifierNode : public ParseTreeNode {
 
     public:
 
     // Constructor
-    explicit IdentifierNode(SourceCodeReference location) : ParseTreeNode{location, ParseTreeNode::Type::Identifier} {}
+    explicit IdentifierNode(SourceCodeReference location, size_t index) : ParseTreeNode{location, ParseTreeNode::Type::Identifier}, index{index} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
+    const size_t index;         // the index that was assigned to this identifier during the lexical analysis
 };
 
 class LiteralNode : public ParseTreeNode {
@@ -84,7 +85,7 @@ class LiteralNode : public ParseTreeNode {
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    int64_t value;
+    const int64_t value;        // the value the literal represents in the source code
 
 };
 
@@ -248,6 +249,7 @@ class ParamDeclNode : public NonTerminalTreeNode {
 
     public:
 
+    // Constructor
     ParamDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern

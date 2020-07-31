@@ -19,7 +19,7 @@ int main() {
                         "BEGIN\n"
                         "RETURN 284;\n"
                         "Jynx := 3 * 284;\n"
-                        "Jynx := (220 - (13 * 12) ) / -300;\n"
+                        "Jynx := (220 - (13 * 12) ) / -Sophie + Daniel;\n"
                         "RETURN 284 - (-12)\n"
                         "END.";
 

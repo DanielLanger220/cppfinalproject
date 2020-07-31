@@ -107,7 +107,7 @@ bool SemanticAnalyzer::createTables() {
 
 
 
-std::unique_ptr<AstIdentifier> SemanticAnalyzer::analyseIdentifier(const IdentifierNode& id, bool lhs) {
+unique_ptr<AstIdentifier> SemanticAnalyzer::analyseIdentifier(const IdentifierNode& id, bool lhs) {
 
     auto res = nametable.find(manager.getString(id.location));
 
@@ -135,7 +135,7 @@ std::unique_ptr<AstIdentifier> SemanticAnalyzer::analyseIdentifier(const Identif
     return make_unique<AstIdentifier>(id.location, index);;
 }
 
-std::unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const ParseTreeNode& expression) {
+unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const ParseTreeNode& expression) {
 
 
     switch(expression.nodetype) {
@@ -239,7 +239,7 @@ std::unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(con
 }
 
 
-std::unique_ptr<AstStatement> SemanticAnalyzer::analyzeStatement(const Statement& statement) {
+unique_ptr<AstStatement> SemanticAnalyzer::analyzeStatement(const Statement& statement) {
 
     // Check, if statement is an assignment or a return statement
     if (statement.subtype == Statement::SubType::Assign)
@@ -256,7 +256,7 @@ std::unique_ptr<AstStatement> SemanticAnalyzer::analyzeStatement(const Statement
     }
 }
 
-std::unique_ptr<AstAssignment> SemanticAnalyzer::analyzeAssignment(const AssignExprNode& expr) {
+unique_ptr<AstAssignment> SemanticAnalyzer::analyzeAssignment(const AssignExprNode& expr) {
 
     // Analyse the identifier on the left hand side
     auto id = analyseIdentifier(static_cast<const IdentifierNode&>(*expr.nodes[0]), true);
@@ -273,7 +273,7 @@ std::unique_ptr<AstAssignment> SemanticAnalyzer::analyzeAssignment(const AssignE
     return make_unique<AstAssignment>(expr.location, move(id), move(addexpr));
 }
 
-std::unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
+unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
 
 
     // Initialise the symbol table and the name-lookup table
