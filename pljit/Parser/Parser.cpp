@@ -94,9 +94,8 @@ unique_ptr<IdentifierNode> Parser::parseIdentifier(bool mandatory) {
     if (!currToken)
         return nullptr;
 
-    if (currToken->tokentype == TokenType::Identifier) {
-        cout << "Identifier parsed: " << manager.getString(currToken->location) << "\t\t" << static_cast<Identifier&>(*currToken).index << endl;
-        return make_unique<IdentifierNode>(currToken->location, static_cast<Identifier&>(*currToken).index);}
+    if (currToken->tokentype == TokenType::Identifier)
+        return make_unique<IdentifierNode>(currToken->location, static_cast<Identifier&>(*currToken).index);
     else {
         if (mandatory)
             manager.printErrorMessage("error: identifier expected", currToken->location);

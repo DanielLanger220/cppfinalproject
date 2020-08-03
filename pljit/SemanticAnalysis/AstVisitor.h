@@ -10,7 +10,8 @@ class AstUnaryArithmeticExpression;
 class AstBinaryArithmeticExpression;
 class AstReturn;
 class AstAssignment;
-
+class AstStatementList;
+class AstFunction;
 
 class AstVisitor {
 
@@ -22,7 +23,8 @@ class AstVisitor {
     virtual void visit(const AstBinaryArithmeticExpression& node) = 0;
     virtual void visit(const AstReturn& node) = 0;
     virtual void visit(const AstAssignment& node) = 0;
-
+    virtual void visit(const AstStatementList& node) = 0;
+    virtual void visit(const AstFunction& node) = 0;
 };
 
 } // namespace jit

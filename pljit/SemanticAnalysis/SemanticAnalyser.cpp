@@ -1,4 +1,4 @@
-#include "SemanticAnalyzer.h"
+#include "SemanticAnalyser.h"
 
 #include <map>
 
@@ -6,15 +6,27 @@ using namespace std;
 
 namespace jit{
 
-bool SemanticAnalyzer::createTables() {
+
+/* Note to the indices of the identifiers:
+     *
+     * During the lexical analysis each identifier was assigned an incrementing index (starting with 0) in the order of its first appearance in the source code.
+     * The structure of the grammar ensures that in a valid function all parameters, variables and constants appear before any undeclared identifier. So any undeclared identifier has
+     * a higher index than any valid parameter, variable or constant.
+     * Also, as in the following method 'createTable', the declared identifiers are processed in the same order as during the lexical analysis, it can easily be checked, if any identifier
+     * is declared multiple times by simple counting the number of declared identifiers and without a map structure.
+     *
+*/
+
+
+bool SemanticAnalyser::createTable() {
 
     table = SymbolTable{};
-    nametable.clear();
 
-    // map used to detect multiple declarations of the same identifier
-    map<string_view, SourceCodeReference> lookupmap{};
+    constants = make_unique<vector<int64_t>>();
 
-    size_t index{0};
+    nofidentifiers = 0;
+    nofparameters = 0;
+    nofvariables = 0;
 
     // Read the Parameters
     if (function.hasParamDecl) {
@@ -28,19 +40,19 @@ bool SemanticAnalyzer::createTables() {
             const IdentifierNode& identifier = static_cast<IdentifierNode&>(*decllist.nodes[i]);
 
             // Check, if identifier already exists
-            auto res = lookupmap.insert(pair<string_view, SourceCodeReference>(manager.getString(identifier.location), identifier.location));
-
-            if (!res.second) {
+             if (identifier.index < nofidentifiers)
+            {
                 manager.printErrorMessage("error: Parameter already declared ...", identifier.location);
-                manager.printErrorMessage("... first declared here", res.first->second);
+                manager.printErrorMessage("... first declared here", table.table[identifier.index].declaration);
                 return false;
             }
 
-            table.insertEntry(index, identifier.location, false, true, 0);
-            nametable.insert(pair<string_view, size_t>(manager.getString(identifier.location), index));
+            table.insertEntry(nofidentifiers, identifier.location, false, true);
 
-            ++index;
+            ++nofidentifiers;
         }
+
+        nofparameters = nofidentifiers;
     }
 
     // Read the Variables
@@ -56,18 +68,17 @@ bool SemanticAnalyzer::createTables() {
             const IdentifierNode& identifier = static_cast<IdentifierNode&>(*decllist.nodes[i]);
 
             // Check, if identifier already exists
-            auto res = lookupmap.insert(pair<string_view, SourceCodeReference>(manager.getString(identifier.location), identifier.location));
-
-            if (!res.second) {
+            if (identifier.index < nofidentifiers)
+            {
                 manager.printErrorMessage("error: Variable already declared ...", identifier.location);
-                manager.printErrorMessage("... first declared here", res.first->second);
+                manager.printErrorMessage("... first declared here", table.table[identifier.index].declaration);
                 return false;
             }
 
-            table.insertEntry(index, identifier.location, false, false, 0);
-            nametable.insert(pair<string_view, size_t>(manager.getString(identifier.location), index));
+            table.insertEntry(nofidentifiers, identifier.location, false, false);
 
-            ++index;
+            ++nofidentifiers;
+            ++nofvariables;
         }
     }
 
@@ -87,18 +98,19 @@ bool SemanticAnalyzer::createTables() {
             const LiteralNode& literal = static_cast<LiteralNode&>(*decl.nodes[2]);
 
             // Check, if identifier already exists
-            auto res = lookupmap.insert(pair<string_view, SourceCodeReference>(manager.getString(identifier.location), identifier.location));
-
-            if (!res.second) {
+            if (identifier.index < nofidentifiers)
+            {
                 manager.printErrorMessage("error: Constant already declared ...", identifier.location);
-                manager.printErrorMessage("... first declared here", res.first->second);
+                manager.printErrorMessage("... first declared here", table.table[identifier.index].declaration);
                 return false;
             }
 
-            table.insertEntry(index, identifier.location, true, true, literal.value);
-            nametable.insert(pair<string_view, size_t>(manager.getString(identifier.location), index));
+            table.insertEntry(nofidentifiers, identifier.location, true, true);
 
-            ++index;
+            constants->push_back(literal.value);
+
+            ++nofidentifiers;
+            ++nofconstants;
         }
     }
 
@@ -106,36 +118,30 @@ bool SemanticAnalyzer::createTables() {
 }
 
 
+unique_ptr<AstIdentifier> SemanticAnalyser::analyseIdentifier(const IdentifierNode& id, bool lhs) {
 
-unique_ptr<AstIdentifier> SemanticAnalyzer::analyseIdentifier(const IdentifierNode& id, bool lhs) {
-
-    auto res = nametable.find(manager.getString(id.location));
-
-    if (res == nametable.end()) {
-
+    if (id.index >= nofidentifiers) {
         manager.printErrorMessage("error: undeclared identifier", id.location);
         return nullptr;
     }
 
-    size_t index = nametable[manager.getString(id.location)];
-
     // If identifier appears on the left hand side, check if it is non-constant
-    if (lhs && table.isConst(index)) {
+    if (lhs && table.isConst(id.index)) {
 
         manager.printErrorMessage("error: unallowed assignment to constant variable", id.location);
         return nullptr;
     }
     // If identifier appears on the right hand side, check if it is initialised
-    else if (!lhs && !table.hasValue(index)) {
+    else if (!lhs && !table.hasValue(id.index)) {
 
         manager.printErrorMessage("error: use of uninitialised variable in expression", id.location);
         return nullptr;
     }
 
-    return make_unique<AstIdentifier>(id.location, index);;
+    return make_unique<AstIdentifier>(id.location, id.index);;
 }
 
-unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const ParseTreeNode& expression) {
+unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseExpression(const ParseTreeNode& expression) {
 
 
     switch(expression.nodetype) {
@@ -158,18 +164,18 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const Pa
                 return analyseIdentifier(static_cast<const IdentifierNode&>(*primexpr.nodes[0]), false);
             // Arithmetic expression in parentheses
             else
-                return analyzeExpression(*primexpr.nodes[1]);
+                return analyseExpression(*primexpr.nodes[1]);
         }
         case ParseTreeNode::Type::UnaryExpr: {
 
             auto& unaryexpr = static_cast<const UnaryExprNode&>(expression);
 
             if (unaryexpr.subtype == UnaryExprNode::SubType::Plus)
-                return analyzeExpression(*unaryexpr.nodes[1]);
+                return analyseExpression(*unaryexpr.nodes[1]);
             else if (unaryexpr.subtype == UnaryExprNode::SubType::NoSign)
-                return analyzeExpression(*unaryexpr.nodes[0]);
+                return analyseExpression(*unaryexpr.nodes[0]);
             else {
-                auto subexpr = analyzeExpression(*unaryexpr.nodes[1]);
+                auto subexpr = analyseExpression(*unaryexpr.nodes[1]);
                 if (!subexpr)
                     return nullptr;
 
@@ -181,13 +187,13 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const Pa
             auto& multexpr = static_cast<const MultExprNode&>(expression);
 
             if (multexpr.subtype == MultExprNode::SubType::Unary)
-                return analyzeExpression(*multexpr.nodes[0]);
+                return analyseExpression(*multexpr.nodes[0]);
             else {
-                auto lhs = analyzeExpression(*multexpr.nodes[0]);
+                auto lhs = analyseExpression(*multexpr.nodes[0]);
                 if (!lhs)
                     return nullptr;
 
-                auto rhs = analyzeExpression(*multexpr.nodes[2]);
+                auto rhs = analyseExpression(*multexpr.nodes[2]);
                 if (!rhs)
                     return nullptr;
 
@@ -208,13 +214,13 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const Pa
             auto& addexpr = static_cast<const AdditiveExprNode&>(expression);
 
             if (addexpr.subtype == AdditiveExprNode::SubType::Unary)
-                return analyzeExpression(*addexpr.nodes[0]);
+                return analyseExpression(*addexpr.nodes[0]);
             else {
-                auto lhs = analyzeExpression(*addexpr.nodes[0]);
+                auto lhs = analyseExpression(*addexpr.nodes[0]);
                 if (!lhs)
                     return nullptr;
 
-                auto rhs = analyzeExpression(*addexpr.nodes[2]);
+                auto rhs = analyseExpression(*addexpr.nodes[2]);
                 if(!rhs)
                     return nullptr;
 
@@ -239,15 +245,15 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyzer::analyzeExpression(const Pa
 }
 
 
-unique_ptr<AstStatement> SemanticAnalyzer::analyzeStatement(const Statement& statement) {
+unique_ptr<AstStatement> SemanticAnalyser::analyseStatement(const Statement& statement) {
 
     // Check, if statement is an assignment or a return statement
     if (statement.subtype == Statement::SubType::Assign)
-        return analyzeAssignment(static_cast<const AssignExprNode&>(*statement.nodes[0]));
+        return analyseAssignment(static_cast<const AssignExprNode&>(*statement.nodes[0]));
     else {
 
         // analyse the additive expression of the return statement
-        auto addexpr = analyzeExpression(*statement.nodes[1]);
+        auto addexpr = analyseExpression(*statement.nodes[1]);
 
         if (!addexpr)
             return nullptr;
@@ -256,28 +262,36 @@ unique_ptr<AstStatement> SemanticAnalyzer::analyzeStatement(const Statement& sta
     }
 }
 
-unique_ptr<AstAssignment> SemanticAnalyzer::analyzeAssignment(const AssignExprNode& expr) {
+unique_ptr<AstAssignment> SemanticAnalyser::analyseAssignment(const AssignExprNode& expr) {
+
+    const IdentifierNode& identifier = static_cast<const IdentifierNode&>(*expr.nodes[0]);
 
     // Analyse the identifier on the left hand side
-    auto id = analyseIdentifier(static_cast<const IdentifierNode&>(*expr.nodes[0]), true);
+    auto id = analyseIdentifier(identifier, true);
 
     if (!id)
         return nullptr;
 
+
     // Analyse the expression on the right hand side
-    auto addexpr = analyzeExpression(static_cast<const AdditiveExprNode&>(*expr.nodes[2]));
+    auto addexpr = analyseExpression(static_cast<const AdditiveExprNode&>(*expr.nodes[2]));
 
     if (!addexpr)
         return nullptr;
 
+
+    // Update the symbol table (identifier on the left hand side is now initialised)
+    table.table[identifier.index].hasValue = true;
+
+
     return make_unique<AstAssignment>(expr.location, move(id), move(addexpr));
 }
 
-unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
+unique_ptr<AstFunction> SemanticAnalyser::analyseFunction() {
 
 
-    // Initialise the symbol table and the name-lookup table
-    if (!createTables())
+    // Initialise the symbol table
+    if (!createTable())
         return nullptr;
 
     bool hasreturn{false};
@@ -294,7 +308,7 @@ unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
 
         const Statement& st = static_cast<Statement&>(*statementlist->nodes[i]);
 
-        auto aststatement = analyzeStatement(st);
+        auto aststatement = analyseStatement(st);
 
         if(!aststatement)
             return nullptr;
@@ -312,7 +326,11 @@ unique_ptr<AstFunction> SemanticAnalyzer::analyseFunction() {
         return nullptr;
     }
 
-    return make_unique<AstFunction>(move(aststatements));
+    auto stlist = make_unique<AstStatementList>(SourceCodeReference{aststatements.front()->location}, move(aststatements));
+
+
+    SourceCodeReference ref = SourceCodeReference{function.nodes.front()->location};
+    return make_unique<AstFunction>(ref, move(stlist), nofidentifiers, nofparameters, nofvariables, move(constants));
 }
 
 

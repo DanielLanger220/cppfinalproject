@@ -132,7 +132,13 @@ void AstPrintVisitor::visit(const AstAssignment& node) {
 
 }
 
-void AstPrintVisitor::printFunction(AstFunction& root) {
+void AstPrintVisitor::visit(const AstStatementList& node) {
+
+    for (auto &s : node.statements)
+        s->accept(*this);
+}
+
+void AstPrintVisitor::visit(const AstFunction& node) {
 
     of.open(filename);
     index = 1;
@@ -144,15 +150,12 @@ void AstPrintVisitor::printFunction(AstFunction& root) {
     of << "0 [label = \"Function\"]\n";
 
     // Print the nodes and edges of the parse tree with the given node as root
-    for (auto &s : root.statements)
-        s->accept(*this);
-
+    node.statementlist->accept(*this);
 
     // Print tail of .dot file
     of << "}\n";
 
     of.close();
-
 
 }
 

@@ -8,6 +8,11 @@ namespace jit {
 
 class Pljit {
 
+    // Pljit will be the owner of the source code strings
+
+
+
+
     public:
     int registerFunction(std::string sourceCode);
 

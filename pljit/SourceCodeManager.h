@@ -36,7 +36,7 @@ class SourceCodeManager {
     size_t getabsolutePosition(const SourceCodeReference& ref) const { return lines[ref.line - 1] + ref.position - 1; }
 
     private:
-    const std::string& code; //TODO: make code constant
+    const std::string& code;
     size_t noflines{0};
     std::vector<size_t> lines{};
 };

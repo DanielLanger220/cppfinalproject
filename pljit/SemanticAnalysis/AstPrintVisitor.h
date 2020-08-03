@@ -17,9 +17,6 @@ class AstPrintVisitor : public AstVisitor {
     // Constructor          Initializes an object with a specified filename for the output and a corresponding SourceCodeManager
     explicit AstPrintVisitor(std::string filename, SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
-    // printFunction        Prints the tree representation of the function given as AstFunction object in *.dot format to the specified file
-    void printFunction(AstFunction& root);
-
     // The visit methods to support the visitor pattern
     void visit(const AstLiteral& node) override;
     void visit(const AstIdentifier& node) override ;
@@ -27,6 +24,8 @@ class AstPrintVisitor : public AstVisitor {
     void visit(const AstBinaryArithmeticExpression& node) override;
     void visit(const AstReturn& node) override ;
     void visit(const AstAssignment& node) override ;
+    void visit(const AstStatementList& node) override;
+    void visit(const AstFunction& node) override;
 
     private:
 

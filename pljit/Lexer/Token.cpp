@@ -18,7 +18,8 @@ std::string Keyword::toString(jit::Keyword::KeywordType t) {
             return "RETURN";
         case KeywordType::Constant:
             return "CONST";
-
+        default:
+            exit(EXIT_FAILURE);
     }
 }
 
@@ -38,6 +39,8 @@ std::string ArithmeticOperator::toString(ArithmeticOperator::ArithmeticType t) {
             return "*";
         case ArithmeticType::Div:
             return "/";
+        default:
+            exit(EXIT_FAILURE);
     }
 
 }
@@ -56,6 +59,8 @@ std::string Separator::toString(Separator::SeparatorType t) {
             return ",";
         case SeparatorType::Dot:
             return ".";
+        default:
+            exit(EXIT_FAILURE);
     }
 
 

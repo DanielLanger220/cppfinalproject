@@ -9,33 +9,32 @@
 
 namespace jit {
 
-class SemanticAnalyzer;
+class SemanticAnalyser;
 
 class SymbolTable {
 
     public:
 
-    friend class SemanticAnalyzer;
+    friend class SemanticAnalyser;
 
     struct TableEntry {
 
-        TableEntry(SourceCodeReference declaration, bool isConst, bool hasValue, int64_t value = 0) : declaration{declaration}, isConst{isConst}, hasValue{hasValue}, value{value}{}
+        TableEntry(SourceCodeReference declaration, bool isConst, bool hasValue) : declaration{declaration}, isConst{isConst}, hasValue{hasValue} {}
 
         SourceCodeReference declaration;    // Reference to the position in the source code
         bool isConst{false};                // Indicates whether the variable is constant
         bool hasValue{false};               // Indicates whether the variable has a valid value
-        int64_t value{0};                   // The value stored in the entry
     };
 
     // Constructor
     SymbolTable() = default;
 
     // getValue         Returns the value from the given index
-    int64_t getValue(size_t index) const;
+    //int64_t getValue(size_t index) const;
 
-    // setValue         Sets the value for the given index
+    /*// setValue         Sets the value for the given index
     void setValue(size_t index, int64_t value);
-
+*/
     // hasValue         Returns whether the variable at the given index has a valid value
     bool hasValue(size_t index) const;
 
@@ -44,9 +43,11 @@ class SymbolTable {
 
     //private:
 
-    void insertEntry(size_t index, SourceCodeReference declaration, bool isConst, bool hasValue, int64_t value = 0);
+    void insertEntry(size_t index, SourceCodeReference declaration, bool isConst, bool hasValue);
 
     std::vector<TableEntry> table{};
+
+    std::vector<int64_t> constants{};
 };
 
 } // namespace jit
