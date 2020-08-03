@@ -37,9 +37,7 @@ class ConstantPropOpt : public OptimisePass {
     std::vector<std::optional<int64_t>> vartable{};
 
 
-
     size_t varstart{};
-    size_t conststart{};
     bool firstRun{true};
 
 };

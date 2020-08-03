@@ -31,9 +31,8 @@ class AstNode {
     // Desctructor
     virtual ~AstNode() = default;
 
-    // evaluate                         Evaluates the node according to the values of the given identifiers
+    // evaluate                         Virtual method which evaluates the node in context of the given evaulation instance
     virtual std::optional<int64_t> evaluate(EvalInstance& instance) = 0;
-
 
     // accept                           Virtual accept method to support the visitor pattern
     virtual void accept(AstVisitor& v) = 0;
@@ -71,13 +70,16 @@ class AstLiteral : public AstArithmeticExpression {
 
     AstLiteral(SourceCodeReference location, int64_t value) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Literal} , value{value} {}
 
+    // evaluate                         Evaluates the literal in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the literal according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
-    const int64_t value{};
+    const int64_t value{};          // The integer value of the literal
 
 };
 
@@ -88,11 +90,13 @@ class AstIdentifier : public AstArithmeticExpression {
     // Constructor
     AstIdentifier(SourceCodeReference location, size_t index) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Identifier} , index{index} {}
 
+    // evaluate                         Evaluates the identifier in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the identifier according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
     const size_t index{};           // Index of this Identifier in the symbol table
@@ -116,11 +120,13 @@ class AstBinaryArithmeticExpression : public AstArithmeticExpression {
                                                                                                                                                               lhs{std::move(lhs)},
                                                                                                                                                               rhs{std::move(rhs)}, op{op}{}
 
+    // evaluate                         Evaluates the expression in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the expression according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
     std::unique_ptr<AstArithmeticExpression> lhs{};         // Left hand side expression of this expression
@@ -144,11 +150,13 @@ class AstUnaryArithmeticExpression : public AstArithmeticExpression {
     AstUnaryArithmeticExpression(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> subexpr) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Unary},
                                                                                                                    subexpr{std::move(subexpr)} {}
 
+    // evaluate                         Evaluates the expression in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the expression according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
     std::unique_ptr<AstArithmeticExpression> subexpr{};     // The subexpression of this expression (expr = -subexpr)
@@ -168,7 +176,6 @@ class AstStatement : public AstNode {
     // Constructor
     AstStatement(SourceCodeReference location, SubType subtype) : AstNode{location, AstNode::AstType::AstStatement} , subtype{subtype} {}
 
-
     const SubType subtype;          // Specifies the type of the Statement
 
 };
@@ -182,11 +189,14 @@ class AstAssignment : public AstStatement {
     AstAssignment(SourceCodeReference location, std::unique_ptr<AstIdentifier> lhs, std::unique_ptr<AstArithmeticExpression> rhs) : AstStatement{location, AstStatement::SubType::AstAssignment},
                                                                                                                                     lhs{std::move(lhs)},
                                                                                                                                     rhs{std::move(rhs)} {}
+
+    // evaluate                         Executes the assignment in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the assignment according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
     std::unique_ptr<AstIdentifier> lhs{};                       // Pointer to the identifier on the left hand side of the assignment
@@ -202,14 +212,14 @@ class AstReturn : public AstStatement {
     AstReturn(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> returnvalue) : AstStatement{location, AstStatement::SubType::AstReturn},
                                                                                                     returnvalue{std::move(returnvalue)} {}
 
+    // evaluate                         Executes the return statement in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the statement according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
-
-    // optimise
 
 
     std::unique_ptr<AstArithmeticExpression> returnvalue{};         // The expression to be returned
@@ -223,11 +233,13 @@ class AstStatementList : public AstNode {
     // Constructor
     AstStatementList(SourceCodeReference location, std::vector<std::unique_ptr<AstStatement>> statements) : AstNode{location, AstNode::AstType::AstStatementList} , statements{std::move(statements)} {}
 
+    // evaluate                         Executes the statements of the list in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
-    // accept           Method to support the visitor pattern
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the statements of the list according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
     std::vector<std::unique_ptr<AstStatement>> statements;      // Contains the statements of the function
@@ -240,28 +252,32 @@ class AstFunction : public AstNode {
     public:
 
     // Constructor
-    AstFunction(SourceCodeReference location, std::unique_ptr<AstStatementList> statements, size_t nofidentifiers, size_t nofparameters,
-                         size_t nofvariables, std::unique_ptr<std::vector<int64_t>> constants) : AstNode{location, AstType::AstFunction},
-                                                                                        statementlist{std::move(statements)},
-                                                                                                 nofidentifier{nofidentifiers},
-                                                                                                 nofparameters{nofparameters},
-                                                                                                 nofvariables{nofvariables},
-                                                                                                 constants{std::move(constants)} {}
+    AstFunction(SourceCodeReference location, std::unique_ptr<AstStatementList> statementlist, size_t nofparameters, size_t nofvariables) : AstNode{location, AstType::AstFunction},
+                                                                                                                                         statementlist{std::move(statementlist)},
+                                                                                                                                         nofidentifiers{nofparameters + nofvariables},
+                                                                                                                                         nofparameters{nofparameters},
+                                                                                                                                         nofvariables{nofvariables} {}
 
-    std::unique_ptr<AstStatementList> statementlist;               // Contains the statements of the function
 
-    const size_t nofidentifier{};                              // Total numbers of valid identifiers in the function (number of parameters + variables + constants)
-    const size_t nofparameters{};
-    const size_t nofvariables{};
-
+    // evaulate                 Evaluates resp. executes the function in context of the given Evaluation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
+    // accept                   Method to support the visitor pattern
     void accept(AstVisitor& v) override {v.visit(*this);}
 
+    // optimise                 Optimises the function according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
-    std::unique_ptr<std::vector<int64_t>> constants{};
 
+    std::unique_ptr<AstStatementList> statementlist;                // Contains the statements of the function
+
+    // The number of valid identifiers (parameters + variables), parameters and variables
+    // CAUTION:
+    // In contrast to during the semantical analyisis, constants are not counted as identifiers in this final AstFunction object anymore as they have been removed
+    // and made to AstLiteral ndoes,  i.e. SemanticAnalyser.nofidentifiers != AstFunction.nofidentifiers
+    const size_t nofidentifiers{};
+    const size_t nofparameters{};
+    const size_t nofvariables{};
 };
 
 

@@ -34,6 +34,7 @@ class SemanticAnalyser {
     //                              In both cases, if successfull, returns a AstStatement node.
     std::unique_ptr<AstStatement> analyseStatement(const Statement& statement);
 
+
     // analyseIdentifier            Checks, if the identifier was declared.
     //                              If lhs is set to true, also checks if the identifier is a non-constant (the identifier appears on the left hand side of an assignment)
     //                              if lhs is set to false, also checks if the identifier has been initialised (the identifier appears in an arithmetic expression)
@@ -50,12 +51,15 @@ class SemanticAnalyser {
 
     SymbolTable table;
 
-    size_t nofidentifiers{0};           // Stores the total number of valid identifiers in the function (parameters + variables + constants)
-    size_t nofparameters{0};            // Stores the number of parameters of the function
+    // The number of valid identifiers (parameters + variables + constants), parameters and variables
+    // CAUTION:
+    // During the semantical analyisis, constants are still counted as identifiers whereas for the final AstFunction object they will be removed
+    // and thus not counted anymore, i.e. SemanticAnalyser.nofidentifiers != AstFunction.nofidentifiers
+    size_t nofidentifiers{0};
+    size_t nofparameters{0};
     size_t nofvariables{0};
-    size_t nofconstants{0};
 
-    std::unique_ptr<std::vector<int64_t>> constants{};
+    std::vector<int64_t> constantTable{};       // Vector to store the values of constants during the semantical analysis
 };
 
 } // namespace jit

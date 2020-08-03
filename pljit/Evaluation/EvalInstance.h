@@ -12,13 +12,7 @@ class EvalInstance {
     public:
 
 
-    EvalInstance(const AstFunction& function, SourceCodeManager manager) : function{function}, manager{std::move(manager)}, identifiers(function.nofidentifier, 0) {
-
-        // Initialise constants
-        for (size_t i = 0; i < function.constants->size(); ++i)
-            identifiers[function.nofparameters + function.nofvariables + i] = (*function.constants)[i];
-
-    }
+    EvalInstance(const AstFunction& function, SourceCodeManager manager) : function{function}, manager{std::move(manager)}, identifiers(function.nofidentifiers, 0) {}
 
     std::optional<int64_t> evaluate(std::vector<int64_t> parameters);
 

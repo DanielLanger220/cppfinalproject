@@ -32,39 +32,39 @@ int main() {
         std::string code3 =
         "PARAM Aubrey, Steffi;\n"
         "VAR Sophie;\n\n\n"
-        "CONST Jynx = 42, Melissa = 2;\n\n\n"
+        "CONST Jynx = 42, Melissa = 13;\n\n\n"
         "BEGIN\n"
-        "Sophie:= Aubrey + Steffi;\n"
-        "Sophie:= Sophie + Sophie * 3;"
-        "RETURN Sophie - 42 + 2 * Jynx\n"
+        "Sophie:= Jynx * Aubrey + 220;\n"
+        "RETURN Sophie\n"
         "END.";
 
+
+    std::string code1 =
+        "PARAM Aubrey, Steffi;\n"
+        "VAR Sophie;\n\n\n"
+        "CONST Jynx = 42, Melissa = 57;\n\n\n"
+        "BEGIN\n"
+        "RETURN Aubrey * Steffi + Jynx\n"
+        "END.";
 
 
 
     Pljit pl{};
 
-    pl.formatSourceCode(code3);
+
+    auto h = pl.registerFunction(code3);
+
+    auto h2 = pl.registerFunction(code1);
+
+    cout << "Das Ergebnis ist: " << h({220, 284}).value() << endl;
+
+    cout << "Nächstes Ergebnis: " << h2({9,5}).value() << endl;
+
+    cout << "Nächstes Ergebnis: " << h({9,5}).value() << endl;
 
 
 
-    Parser p{code3};
-
-    auto n = p.parseFunction();
-
-    if (!n)
-        return 1;
-
-
-
-    //cout << n->nodes.size() << endl;
-
-    /*for (size_t i = 0; i < n->nodes.size(); ++i)
-    {
-        cout << i << endl;
-        cout << p.manager.getString(n->nodes[i]->location) << endl;
-    }*/
-
+/*
     ParsePrintVisitor printer{"/home/daniel/220ParseTree.dot", p.manager};
     printer.printTree(*n);
 
@@ -85,7 +85,7 @@ int main() {
     ConstantPropOpt constopt{};
 
     //func->optimise(dcopt);
-    func->optimise(constopt);
+    //func->optimise(constopt);
 
 
 
@@ -108,7 +108,7 @@ int main() {
     if (!result)
         return 0;
 
-    cout << "Das Ergebnis ist:\t" << result.value() << endl;
+    cout << "Das Ergebnis ist:\t" << result.value() << endl;*/
 
 
 }

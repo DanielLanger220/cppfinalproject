@@ -4,35 +4,6 @@
 
 namespace jit {
 
-void DeadCodeOpt::visit(AstLiteral& node) {
-
-}
-
-
-void DeadCodeOpt::visit(AstIdentifier& node) {
-
-}
-
-void DeadCodeOpt::visit(AstUnaryArithmeticExpression& node) {
-
-
-}
-
-void DeadCodeOpt::visit(AstBinaryArithmeticExpression& node) {
-
-
-}
-
-void DeadCodeOpt::visit(AstReturn& node) {
-
-
-}
-
-void DeadCodeOpt::visit(AstAssignment& node) {
-
-
-}
-
 void DeadCodeOpt::visit(AstStatementList& node) {
 
     auto it = node.statements.begin();

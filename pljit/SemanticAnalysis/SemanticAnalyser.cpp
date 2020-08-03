@@ -22,7 +22,7 @@ bool SemanticAnalyser::createTable() {
 
     table = SymbolTable{};
 
-    constants = make_unique<vector<int64_t>>();
+    constantTable.clear();
 
     nofidentifiers = 0;
     nofparameters = 0;
@@ -107,10 +107,9 @@ bool SemanticAnalyser::createTable() {
 
             table.insertEntry(nofidentifiers, identifier.location, true, true);
 
-            constants->push_back(literal.value);
+            constantTable.push_back(literal.value);
 
             ++nofidentifiers;
-            ++nofconstants;
         }
     }
 
@@ -138,7 +137,8 @@ unique_ptr<AstIdentifier> SemanticAnalyser::analyseIdentifier(const IdentifierNo
         return nullptr;
     }
 
-    return make_unique<AstIdentifier>(id.location, id.index);;
+    return make_unique<AstIdentifier>(id.location, id.index);
+
 }
 
 unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseExpression(const ParseTreeNode& expression) {
@@ -149,9 +149,16 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseExpression(const Pa
         case ParseTreeNode::Type::Literal:
             return make_unique<AstLiteral>(expression.location, static_cast<const LiteralNode&>(expression).value);
 
-        case ParseTreeNode::Type::Identifier:
-            return analyseIdentifier(static_cast<const IdentifierNode&>(expression), false);
+        case ParseTreeNode::Type::Identifier: {
 
+            size_t index = static_cast<const IdentifierNode&>(expression).index;
+
+            // If the identifier is a constant, create a literal node, otherwise create an identifier node
+            if (table.isConst(index))
+                return make_unique<AstLiteral>(expression.location, constantTable[index - nofparameters - nofvariables]);
+            else
+                return analyseIdentifier(static_cast<const IdentifierNode&>(expression), false);
+        }
         case ParseTreeNode::Type::PrimaryExpr: {
 
             const auto& primexpr = static_cast<const PrimaryExprNode&>(expression);
@@ -160,8 +167,15 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseExpression(const Pa
             if (primexpr.subtype == PrimaryExprNode::SubType::Literal)
                 return make_unique<AstLiteral>(primexpr.location, static_cast<const LiteralNode&>(*primexpr.nodes[0]).value);
             // Identifier
-            else if (primexpr.subtype == PrimaryExprNode::SubType::Identifier)
-                return analyseIdentifier(static_cast<const IdentifierNode&>(*primexpr.nodes[0]), false);
+            else if (primexpr.subtype == PrimaryExprNode::SubType::Identifier) {
+                const auto& identifier = static_cast<const IdentifierNode&>(*primexpr.nodes[0]);
+
+                // If the identifier is a constant, create a literal node, otherwise create an identifier node
+                if (table.isConst(identifier.index))
+                    return make_unique<AstLiteral>(identifier.location, constantTable[identifier.index - nofparameters - nofvariables]);
+                else
+                    return analyseIdentifier(identifier, false);
+            }
             // Arithmetic expression in parentheses
             else
                 return analyseExpression(*primexpr.nodes[1]);
@@ -284,6 +298,8 @@ unique_ptr<AstAssignment> SemanticAnalyser::analyseAssignment(const AssignExprNo
     table.table[identifier.index].hasValue = true;
 
 
+    //unique_ptr<AstIdentifier> temp
+
     return make_unique<AstAssignment>(expr.location, move(id), move(addexpr));
 }
 
@@ -330,9 +346,7 @@ unique_ptr<AstFunction> SemanticAnalyser::analyseFunction() {
 
 
     SourceCodeReference ref = SourceCodeReference{function.nodes.front()->location};
-    return make_unique<AstFunction>(ref, move(stlist), nofidentifiers, nofparameters, nofvariables, move(constants));
+    return make_unique<AstFunction>(ref, move(stlist), nofparameters, nofvariables);
 }
-
-
 
 } // namespace jit

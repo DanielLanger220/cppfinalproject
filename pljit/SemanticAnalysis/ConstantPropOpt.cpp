@@ -8,20 +8,19 @@ namespace jit {
 void ConstantPropOpt::visit(AstLiteral& node) {
 
     exprmap.insert(pair<AstNode*, int64_t>(&node, node.value));
-
 }
 
 void ConstantPropOpt::visit(AstIdentifier& node) {
 
-    // Check, if the identifier is a constant or a variable currently marked as constant
-    if (node.index >= conststart || (node.index >= varstart && vartable[node.index]))
+    // Check, if the identifier is a variable currently marked as constant
+    if (node.index >= varstart && vartable[node.index])
         exprmap.insert(pair<AstNode*, int64_t>(&node, *vartable[node.index]));
 
 }
 
 void ConstantPropOpt::visit(AstUnaryArithmeticExpression& node) {
 
-    if(firstRun) {
+    if(firstRun) {  // First run
 
         node.subexpr->optimise(*this);
 
@@ -31,7 +30,7 @@ void ConstantPropOpt::visit(AstUnaryArithmeticExpression& node) {
         if (it != exprmap.end())
             exprmap.insert(pair<AstNode*, int64_t>(&node, - it->second.value()));
     }
-    else {
+    else {  // Second run
 
         // If this unary expression (referred to by the node reference) cannot be made constant, it is impossible that the subexpression can be made constant.
         // So just descend into the subexpression and check if subexpressions of the subexpression can be optimised
@@ -43,7 +42,7 @@ void ConstantPropOpt::visit(AstUnaryArithmeticExpression& node) {
 
 void ConstantPropOpt::visit(AstBinaryArithmeticExpression& node) {
 
-    if (firstRun) {
+    if (firstRun) { // First run
 
         node.lhs->optimise(*this);
         node.rhs->optimise(*this);
@@ -82,7 +81,7 @@ void ConstantPropOpt::visit(AstBinaryArithmeticExpression& node) {
                 exprmap.insert(pair<AstNode*, optional<int64_t>>(&node, result));
         }
     }
-    else {
+    else {  // Second run
 
         // Check if the left subexpression can be made constant, otherwise descend into it
         auto it = exprmap.find(node.lhs.get());
@@ -112,12 +111,12 @@ void ConstantPropOpt::visit(AstBinaryArithmeticExpression& node) {
 
 void ConstantPropOpt::visit(AstReturn& node) {
 
-    if (firstRun) {
+    if (firstRun) { // First run
 
         // Optimise the return value of the return statement
         node.returnvalue->optimise(*this);
     }
-    else {
+    else {  // Second run
 
         // Check if the return value expression can be merged into a literal node, otherwise descend into it
         auto it = exprmap.find(node.returnvalue.get());
@@ -135,7 +134,7 @@ void ConstantPropOpt::visit(AstReturn& node) {
 
 void ConstantPropOpt::visit(AstAssignment& node) {
 
-    if (firstRun) {
+    if (firstRun) { // First run
 
         // optimise the expression on the right hand side
         node.rhs->optimise(*this);
@@ -150,8 +149,7 @@ void ConstantPropOpt::visit(AstAssignment& node) {
             vartable[node.lhs->index] = nullopt;
 
     }
-    else {
-
+    else {      // Second run
 
         // Check if the expression on the right hand side can be merged into a literal node, otherwise descend into it
         auto it = exprmap.find(node.rhs.get());
@@ -172,22 +170,15 @@ void ConstantPropOpt::visit(AstStatementList& node) {
     // Iterate over all statements in order
     for(auto& st : node.statements)
         st->optimise(*this);
-
 }
 
 
 void ConstantPropOpt::visit(AstFunction& node) {
 
-    vartable = vector<optional<int64_t>>(node.nofidentifier, nullopt);
+    vartable = vector<optional<int64_t>>(node.nofidentifiers, nullopt);
     exprmap.clear();
 
     varstart = node.nofparameters;
-    conststart = node.nofparameters + node.nofvariables;
-
-    // Initialise the table with the constant values
-    for(size_t i = 0; i < node.constants->size(); ++i)
-        vartable[node.nofparameters + node.nofvariables + i] = (*node.constants)[i];
-
 
     // Do the first run over the nodes
     firstRun = true;
@@ -198,8 +189,5 @@ void ConstantPropOpt::visit(AstFunction& node) {
     node.statementlist->optimise(*this);
 
 }
-
-
-
 
 } // namespace jit

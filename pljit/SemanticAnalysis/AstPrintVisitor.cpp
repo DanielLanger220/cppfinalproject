@@ -6,8 +6,8 @@ namespace jit{
 
 void AstPrintVisitor::visit(const AstLiteral& node) {
 
-    // Print the label of the node
-    of << index << " [label=\"" << manager.getString(node.location) << "\"]\n";
+    // Print the label with color
+    of << index << " [label=\"" << manager.getString(node.location) << "\", style = \"filled\", fillcolor = \"#8055bb\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
