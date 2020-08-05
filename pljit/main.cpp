@@ -2,13 +2,9 @@
 
 #include "Pljit.h"
 #include "SemanticAnalysis/AstPrintVisitor.h"
-#include "SemanticAnalysis/SemanticAnalyser.h"
-#include "pljit/Lexer/Lexer.h"
 #include "pljit/Parser/ParsePrintVisitor.h"
-#include "pljit/Parser/Parser.h"
 #include "Evaluation/EvalInstance.h"
-#include "SemanticAnalysis/DeadCodeOpt.h"
-#include "SemanticAnalysis/ConstantPropOpt.h"
+
 
 //---------------------------------------------------------------------------
 using namespace std;
@@ -34,81 +30,50 @@ int main() {
         "VAR Sophie;\n\n\n"
         "CONST Jynx = 42, Melissa = 13;\n\n\n"
         "BEGIN\n"
-        "Sophie:= Jynx * Aubrey + 220;\n"
+        "Sophie:= Jynx * Aubrey * 8 - 15 + 220;\n"
         "RETURN Sophie\n"
         "END.";
 
 
     std::string code1 =
-        "PARAM Aubrey, Steffi;\n"
-        "VAR Sophie;\n\n\n"
-        "CONST Jynx = 42, Melissa = 57;\n\n\n"
-        "BEGIN\n"
-        "RETURN Aubrey * Steffi + Jynx\n"
-        "END.";
+            //"\n\n\n\n\n\n"
+            //
+            "\n\n\n\n\n\n"
+            ""
+            ""
+            ""
+            ""
+            "PARAM p, q;\n"
+            "VAR v;\n"
+            "CONST c = 42, d = 57;\n"
+            "BEGIN\n"
+            "p := c + d * q;\n"
+            "v := 220;\n\n\n\n\n\n"
+            "RETURN p * q + c\n"
+            "END.";
 
 
 
     Pljit pl{};
 
 
-    auto h = pl.registerFunction(code3);
+    //auto h = pl.registerFunction(code3);
 
     auto h2 = pl.registerFunction(code1);
 
-    cout << "Das Ergebnis ist: " << h({220, 284}).value() << endl;
+    //cout << "Das Ergebnis ist: " << h({220, 284}).value() << endl;
 
-    cout << "Nächstes Ergebnis: " << h2({9,5}).value() << endl;
+    cout << "Nächstes Ergebnis: " << h2({9,5}).value_or(220) << endl;
 
-    cout << "Nächstes Ergebnis: " << h({9,5}).value() << endl;
+    //cout << "Nächstes Ergebnis: " << h({9,5}).value() << endl;
 
-
-
-/*
-    ParsePrintVisitor printer{"/home/daniel/220ParseTree.dot", p.manager};
-    printer.printTree(*n);
-
-    SemanticAnalyser seman{p.manager, *n};
-
-    if (!seman.createTable())
-        return 1;
+    AstPrintVisitor printvisit{"/home/daniel/parsetree.dot", pl.vecFunctions[0].manager};
 
 
 
-    std::unique_ptr<AstFunction> func = seman.analyseFunction();
 
-    if (!func)
-        return 1;
+    printvisit.visit(*pl.vecFunctions[0].function.value());
 
-
-    DeadCodeOpt dcopt{};
-    ConstantPropOpt constopt{};
-
-    //func->optimise(dcopt);
-    //func->optimise(constopt);
-
-
-
-    AstPrintVisitor astprinter{"/home/daniel/284AST.dot", p.manager};
-
-    func->accept(astprinter);
-
-
-    EvalInstance ev{*func, p.manager};
-
-    optional<int64_t> result;
-
-
-
-    auto eval2 = ev;
-
-
-    result = eval2.evaluate({9, 5});
-
-    if (!result)
-        return 0;
-
-    cout << "Das Ergebnis ist:\t" << result.value() << endl;*/
 
 
 }

@@ -1,8 +1,11 @@
 #include "SourceCodeManager.h"
 
+
+using namespace std;
+
 namespace jit {
 
-SourceCodeManager::SourceCodeManager(std::string &sourceCode) : code{sourceCode} {
+SourceCodeManager::SourceCodeManager(const string &sourceCode) : code{sourceCode} {
 
     if (code.empty()) {
         noflines = 0;
@@ -15,37 +18,37 @@ SourceCodeManager::SourceCodeManager(std::string &sourceCode) : code{sourceCode}
     lines.push_back(0);
 
     while (pos < code.size()) {
-        pos = code.find('\n', pos + 1);
-        if (pos == std::string::npos) {
+        pos = code.find('\n', pos);
+        if (pos == string::npos) {
             lines.push_back(code.size());
             return;
         }
 
         lines.push_back(pos + 1);
         ++noflines;
+        ++pos;
     }
 }
 
-void SourceCodeManager::printErrorMessage(const std::string& message, const SourceCodeReference& location) const {
-    std::cerr << location.line << ":" << location.position << ":  " << message << std::endl;
+void SourceCodeManager::printErrorMessage(const string& message, const SourceCodeReference& location) const {
 
-    std::string_view codeview{code};
-    std::cerr << codeview.substr(lines[location.line - 1], lines[location.line] - lines[location.line - 1]);
+    cerr << location.line << ":" << location.position << ":  " << message << endl;
+    cerr << code.substr(lines[location.line - 1], lines[location.line] - lines[location.line - 1]);
 
     for (size_t i = 1; i < location.position; ++i)
-        std::cerr << ' ';
+        cerr << ' ';
 
-    std::cerr << '^';
+    cerr << '^';
 
     for (size_t i = 1; i < location.range; ++i)
-        std::cerr << '~';
+        cerr << '~';
 
-    std::cerr << std::endl;
+    cerr << endl;
 }
 
-std::string_view SourceCodeManager::getString(const SourceCodeReference &loc) const {
+string_view SourceCodeManager::getString(const SourceCodeReference &loc) const {
 
-    return std::string_view{code.data() + getabsolutePosition(loc), loc.range};
+    return string_view{code.data() + getabsolutePosition(loc), loc.range};
 }
 
 

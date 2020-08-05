@@ -6,6 +6,8 @@
 #include <optional>
 #include <memory>
 
+#include "SourceCodeManager.h"
+
 namespace jit {
 
 class AstFunction;
@@ -36,11 +38,12 @@ class Pljit {
     // registerFunction         registers the given source code and returns a handle to the function
     PljitHandle registerFunction(std::string sourceCode);
 
-    private:
+    //private:
 
-    struct CodeHandlePair {
-        explicit CodeHandlePair(std::string sourceCode) : sourceCode(std::move(sourceCode)) {}
+    struct HandleEntry {
+        explicit HandleEntry(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}
         std::string sourceCode;
+        SourceCodeManager manager;
         std::optional<std::unique_ptr<AstFunction>> function{std::nullopt};
     };
 
@@ -48,10 +51,8 @@ class Pljit {
     std::unique_ptr<AstFunction> compileFunction(size_t index);
 
 
-    std::vector<CodeHandlePair> vecFunctions{};
+    std::vector<HandleEntry> vecFunctions{};
 
-    // formatSourceCode         Formats the end of the source code so that it has exactly one new-line character at the end
-    void formatSourceCode(std::string &sourcecode);
 };
 
 } // namespace jit

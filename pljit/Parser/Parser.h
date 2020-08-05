@@ -12,14 +12,16 @@ class Parser {
 
     public:
 
-    explicit Parser(std::string& sourcecode) : manager{sourcecode}, lex{sourcecode, manager} {}
+    // Constructor
+    Parser(const std::string& sourcecode, const SourceCodeManager& manager) : manager{manager}, lex{sourcecode, manager} {}
 
     // parseFunction                Parses the source code and, if successfull, returns a pointer to the root node of the created parse tree
     std::unique_ptr<FuncDeclNode> parseFunction();
 
-    //private:
-    SourceCodeManager manager;
-    Lexer lex;
+    private:
+
+    const SourceCodeManager& manager;       // A reference to the source code manager
+    Lexer lex;                              // The lexer that is used within the parser
 
 
     // Parser methods to parse Separator-, Keyword- and ArithemticOperator token. The methods check if the next token matches the token given as parameter.

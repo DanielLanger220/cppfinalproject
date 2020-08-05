@@ -1,6 +1,5 @@
 #include "Lexer.h"
 
-
 namespace jit {
 
 using namespace std;
@@ -29,7 +28,7 @@ unique_ptr<Token> Lexer::nextToken() {
     }
 
     // The resulting token
-    unique_ptr<Token> res;
+    unique_ptr<Token> res{};
 
     // Check for literal
     if (isdigit(*currAbsPos)) {
@@ -72,11 +71,12 @@ unique_ptr<Token> Lexer::nextToken() {
         else if (tk == "RETURN")
             res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Ret);
         else {
-            auto r = nametable.insert(pair<string_view,size_t>(tk, nofidentifiers));
+            /*auto r = nametable.insert(pair<string_view,size_t>(tk, nofidentifiers));
             if (r.second)
                 res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), nofidentifiers++);
             else
-                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), r.first->second);
+                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), r.first->second);*/
+            res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n));
         }
         currAbsPos += n;
         currPos += n;

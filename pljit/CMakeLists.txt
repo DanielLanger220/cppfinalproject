@@ -1,6 +1,22 @@
 set(PLJIT_SOURCES
         main.cpp
-        SourceCodeManager.cpp SourceCodeManager.h Lexer/Lexer.cpp Lexer/Lexer.h Lexer/Token.h Pljit.cpp Pljit.h Parser/ParseTreeNode.h Parser/Parser.cpp Parser/Parser.h Parser/ParseTreeVisitor.h Parser/ParsePrintVisitor.cpp Parser/ParsePrintVisitor.h SemanticAnalysis/AstNode.h SemanticAnalysis/SymbolTable.cpp SemanticAnalysis/SymbolTable.h SemanticAnalysis/SemanticAnalyser.cpp SemanticAnalysis/SemanticAnalyser.h SemanticAnalysis/AstVisitor.h Parser/ParseTreeNode.cpp SemanticAnalysis/AstPrintVisitor.cpp SemanticAnalysis/AstPrintVisitor.h Lexer/Token.cpp Evaluation/EvalInstance.cpp Evaluation/EvalInstance.h SemanticAnalysis/AstNode.cpp SemanticAnalysis/OptimisePass.cpp SemanticAnalysis/OptimisePass.h SemanticAnalysis/DeadCodeOpt.cpp SemanticAnalysis/DeadCodeOpt.h SemanticAnalysis/ConstantPropOpt.cpp SemanticAnalysis/ConstantPropOpt.h)
+        SourceCodeManager.cpp SourceCodeManager.h
+        Lexer/Lexer.cpp Lexer/Lexer.h
+        Lexer/Token.cpp Lexer/Token.h
+        Pljit.cpp Pljit.h
+        Parser/ParseTreeNode.cpp Parser/ParseTreeNode.h
+        Parser/Parser.cpp Parser/Parser.h
+        Parser/ParseTreeVisitor.h
+        Parser/ParsePrintVisitor.cpp Parser/ParsePrintVisitor.h
+        SemanticAnalysis/AstNode.cpp SemanticAnalysis/AstNode.h
+        SemanticAnalysis/SymbolTable.cpp SemanticAnalysis/SymbolTable.h
+        SemanticAnalysis/SemanticAnalyser.cpp SemanticAnalysis/SemanticAnalyser.h
+        SemanticAnalysis/AstVisitor.h
+        SemanticAnalysis/AstPrintVisitor.cpp SemanticAnalysis/AstPrintVisitor.h
+        Evaluation/EvalInstance.cpp Evaluation/EvalInstance.h
+        SemanticAnalysis/OptimisePass.cpp SemanticAnalysis/OptimisePass.h
+        SemanticAnalysis/DeadCodeOpt.cpp SemanticAnalysis/DeadCodeOpt.h
+        SemanticAnalysis/ConstantPropOpt.cpp SemanticAnalysis/ConstantPropOpt.h)
 
 add_library(pljit_core ${PLJIT_SOURCES})
 target_include_directories(pljit_core PUBLIC ${CMAKE_SOURCE_DIR})

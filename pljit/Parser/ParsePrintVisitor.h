@@ -14,7 +14,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     public:
 
     // Constructor          Initializes an object with a specified filename for the output and a corresponding SourceCodeManager
-    explicit ParsePrintVisitor(std::string filename, SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
+    ParsePrintVisitor(std::string filename, const SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
     // printTree            Prints the parse tree defined by the given node a root
     void printTree(ParseTreeNode& root);
@@ -45,7 +45,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     size_t index{0};                    // Index used for numbering the nodes
     std::ofstream of{};                 // The output stream to write with
     std::string filename{};             // The name of the output file
-    SourceCodeManager& manager;         // The corresponding SourceCodeManager
+    const SourceCodeManager& manager;         // The corresponding SourceCodeManager
     std::vector<size_t> indexstack{};   // Stack that is used for a correct indexing of the nodes
 
     // Helper methods
