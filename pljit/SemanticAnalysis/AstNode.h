@@ -68,6 +68,7 @@ class AstLiteral : public AstArithmeticExpression {
 
     public:
 
+    // Constructor
     AstLiteral(SourceCodeReference location, int64_t value) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Literal} , value{value} {}
 
     // evaluate                         Evaluates the literal in context of the given evaulation instance
@@ -90,7 +91,7 @@ class AstIdentifier : public AstArithmeticExpression {
     // Constructor
     AstIdentifier(SourceCodeReference location, size_t index) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Identifier} , index{index} {}
 
-    // evaluate                         Evaluates the identifier in context of the given evaulation instance
+    // evaluate                 Evaluates the identifier in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
     // accept                   Method to support the visitor pattern
@@ -116,11 +117,10 @@ class AstBinaryArithmeticExpression : public AstArithmeticExpression {
 
     // Constructor
     AstBinaryArithmeticExpression(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> lhs, std::unique_ptr<AstArithmeticExpression> rhs, ArithmeticOperation op) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Binary},
+                                                                                                                                                                                      lhs{std::move(lhs)},
+                                                                                                                                                                                      rhs{std::move(rhs)}, op{op}{}
 
-                                                                                                                                                              lhs{std::move(lhs)},
-                                                                                                                                                              rhs{std::move(rhs)}, op{op}{}
-
-    // evaluate                         Evaluates the expression in context of the given evaulation instance
+    // evaluate                 Evaluates the expression in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
     // accept                   Method to support the visitor pattern
@@ -150,7 +150,7 @@ class AstUnaryArithmeticExpression : public AstArithmeticExpression {
     AstUnaryArithmeticExpression(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> subexpr) : AstArithmeticExpression{location, AstArithmeticExpression::Subtype::Unary},
                                                                                                                    subexpr{std::move(subexpr)} {}
 
-    // evaluate                         Evaluates the expression in context of the given evaulation instance
+    // evaluate                 Evaluates the expression in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
     // accept                   Method to support the visitor pattern
@@ -186,11 +186,11 @@ class AstAssignment : public AstStatement {
     public:
 
     // Constructor
-    AstAssignment(SourceCodeReference location, std::unique_ptr<AstIdentifier> lhs, std::unique_ptr<AstArithmeticExpression> rhs) : AstStatement{location, AstStatement::SubType::AstAssignment},
+    AstAssignment(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> lhs, std::unique_ptr<AstArithmeticExpression> rhs) : AstStatement{location, AstStatement::SubType::AstAssignment},
                                                                                                                                     lhs{std::move(lhs)},
                                                                                                                                     rhs{std::move(rhs)} {}
 
-    // evaluate                         Executes the assignment in context of the given evaulation instance
+    // evaluate                 Executes the assignment in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
     // accept                   Method to support the visitor pattern
@@ -199,7 +199,7 @@ class AstAssignment : public AstStatement {
     // optimise                 Optimises the assignment according to the given Optimisation pass
     void optimise(OptimisePass& opt) override {opt.visit(*this);}
 
-    std::unique_ptr<AstIdentifier> lhs{};                       // Pointer to the identifier on the left hand side of the assignment
+    std::unique_ptr<AstArithmeticExpression> lhs{};             // Pointer to the identifier on the left hand side of the assignment
     std::unique_ptr<AstArithmeticExpression> rhs{};             // Pointer to the expression on the right hand side of the assignment
 
 };
@@ -212,7 +212,7 @@ class AstReturn : public AstStatement {
     AstReturn(SourceCodeReference location, std::unique_ptr<AstArithmeticExpression> returnvalue) : AstStatement{location, AstStatement::SubType::AstReturn},
                                                                                                     returnvalue{std::move(returnvalue)} {}
 
-    // evaluate                         Executes the return statement in context of the given evaulation instance
+    // evaluate                 Executes the return statement in context of the given evaulation instance
     std::optional<int64_t> evaluate(EvalInstance& instance) override;
 
     // accept                   Method to support the visitor pattern

@@ -11,9 +11,9 @@ void DeadCodeOpt::visit(AstStatementList& node) {
     while((*it)->subtype != AstStatement::SubType::AstReturn)
         ++it;
 
-    std::cout << "Daniel + Sophie!\n";
-
     ++it;
+
+    assert(it <= node.statements.end());
 
     node.statements.erase(it, node.statements.end());
 }

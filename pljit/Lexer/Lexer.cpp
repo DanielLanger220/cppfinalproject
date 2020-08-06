@@ -1,8 +1,10 @@
 #include "Lexer.h"
 
-namespace jit {
 
 using namespace std;
+
+
+namespace jit {
 
 using SeparatorType = Separator::SeparatorType;
 using ArithmeticType = ArithmeticOperator::ArithmeticType;
@@ -23,7 +25,7 @@ unique_ptr<Token> Lexer::nextToken() {
 
     if (currAbsPos == code.end())
     {
-        cerr << "error: end of file reached during parsing\n";
+        cerr << "error: end of file reached during parsing\nCompilation aborted\n";
         return nullptr;
     }
 
@@ -71,11 +73,6 @@ unique_ptr<Token> Lexer::nextToken() {
         else if (tk == "RETURN")
             res = make_unique<Keyword>(SourceCodeReference(currLine, currPos, n), KeywordType::Ret);
         else {
-            /*auto r = nametable.insert(pair<string_view,size_t>(tk, nofidentifiers));
-            if (r.second)
-                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), nofidentifiers++);
-            else
-                res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n), r.first->second);*/
             res = make_unique<Identifier>(SourceCodeReference(currLine, currPos, n));
         }
         currAbsPos += n;

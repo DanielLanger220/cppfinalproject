@@ -18,6 +18,8 @@ class Pljit {
 
     class PljitHandle {
 
+        friend class Pljit;
+
         public:
 
         explicit PljitHandle(Pljit* jit, size_t index) : index{index}, jit{jit} {};
@@ -25,9 +27,9 @@ class Pljit {
 
         private:
 
-        std::optional<AstFunction*> handle;
-        size_t index;
-        Pljit* jit;
+        std::optional<AstFunction*> handle{std::nullopt};
+        const size_t index;
+        Pljit* const jit;
     };
 
 
@@ -38,7 +40,17 @@ class Pljit {
     // registerFunction         registers the given source code and returns a handle to the function
     PljitHandle registerFunction(std::string sourceCode);
 
-    //private:
+    // printAst                 Prints the abstract syntax tree referenced to by the given handle to the given filename in *.dot format
+    void printAst(const PljitHandle& handle, const std::string& filename);
+
+    // printParseTree           Prints the parse tree referenced to by the given handle to the given filename in *.dot format
+    //                          NOTE:
+    //                          As the parse tree object is not permanently stored by the Pljit object, this needs the source code to be parsed again on the fly to temporary create
+    //                          a parse tree object which then is printed.
+    //                          As this method is not officially requested and rather for test purposes, I decided to do it that way
+    void printParseTree(const PljitHandle& h, const std::string& filename);
+
+    private:
 
     struct HandleEntry {
         explicit HandleEntry(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}

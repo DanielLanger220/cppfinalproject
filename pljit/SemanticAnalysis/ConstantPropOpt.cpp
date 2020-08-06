@@ -144,9 +144,9 @@ void ConstantPropOpt::visit(AstAssignment& node) {
 
         // if the expression is a constant value, mark the identifier on the left hand side as constant
         if (it != exprmap.end())
-            vartable[node.lhs->index] = it->second.value();
+            vartable[static_cast<AstIdentifier&>(*node.lhs).index] = it->second.value();
         else    // Otherwise mark the identifier on the left hand side as non-constant
-            vartable[node.lhs->index] = nullopt;
+            vartable[static_cast<AstIdentifier&>(*node.lhs).index] = nullopt;
 
     }
     else {      // Second run

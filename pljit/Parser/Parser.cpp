@@ -1,8 +1,9 @@
 #include "pljit/Parser/Parser.h"
 
-namespace jit {
 
 using namespace std;
+
+namespace jit {
 
 using TokenType = Token::TokenType;
 using SeparatorType = Separator::SeparatorType;
@@ -18,9 +19,11 @@ unique_ptr<GenericTerminalNode> Parser::parseSeparator(SeparatorType t, bool man
         return nullptr;
 
     if (currToken->tokentype != Token::TokenType::Separator || static_cast<Separator*>(currToken.get())->separatortype != t) {
+
         if (mandatory)
             manager.printErrorMessage("error: '" + Separator::toString(t) + "' expected", currToken->location);
 
+        // Move falsely read token back to the lookahead place
         lookaheadToken = move(currToken);
 
         return nullptr;
@@ -37,9 +40,11 @@ unique_ptr<GenericTerminalNode> Parser::parseKeyword(KeywordType t, bool mandato
         return nullptr;
 
     if (currToken->tokentype != Token::TokenType::Keyword || static_cast<Keyword*>(currToken.get())->keywordtype != t)  {
+
         if (mandatory)
             manager.printErrorMessage("error: '" + Keyword::toString(t) + "' expected", currToken->location);
 
+        // Move falsely read token back to the lookahead place
         lookaheadToken = move(currToken);
 
         return nullptr;
@@ -60,6 +65,7 @@ unique_ptr<GenericTerminalNode> Parser::parseArithmeticOperator(ArithmeticType t
         if (mandatory)
             manager.printErrorMessage("error: '" + ArithmeticOperator::toString(t) + "' expected", currToken->location);
 
+        // Move falsely read token back to the lookahead place
         lookaheadToken = move(currToken);
 
         return nullptr;
@@ -95,11 +101,12 @@ unique_ptr<IdentifierNode> Parser::parseIdentifier(bool mandatory) {
         return nullptr;
 
     if (currToken->tokentype == TokenType::Identifier)
-        return make_unique<IdentifierNode>(currToken->location, static_cast<Identifier&>(*currToken).index);
+        return make_unique<IdentifierNode>(currToken->location);
     else {
         if (mandatory)
             manager.printErrorMessage("error: identifier expected", currToken->location);
 
+        // Move falsely read token back to the lookahead place
         lookaheadToken = move(currToken);
         return nullptr;
     }
@@ -118,6 +125,7 @@ unique_ptr<LiteralNode> Parser::parseLiteral(bool mandatory) {
         if(mandatory)
             manager.printErrorMessage("error: literal expected", currToken->location);
 
+        // Move falsely read token back to the lookahead place
         lookaheadToken = move(currToken);
         return nullptr;
     }
@@ -130,28 +138,24 @@ unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
     // vector of child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
-    // Check for -> Identifier
-    unique_ptr<ParseTreeNode> n = parseIdentifier(false);
-
-    if (n) {
-        nodes.push_back(move(n));
+    // Check for -> Identifier alternative
+    unique_ptr<ParseTreeNode> n;
+    if ((n = parseIdentifier(false))) {
+        nodes.push_back(move(n));   // Push identifier to the nodes
         return make_unique<PrimaryExprNode>(nodes[0]->location, move(nodes), PrimaryExprNode::SubType::Identifier);
     }
 
-    // Check for -> Literal
-    n = parseLiteral(false);
-    if (n) {
-        nodes.push_back(move(n));
+    // Check for -> Literal alternative
+    if ((n = parseLiteral(false))) {
+        nodes.push_back(move(n));   // Push literal to the nodes
         return make_unique<PrimaryExprNode>(nodes[0]->location, move(nodes), PrimaryExprNode::SubType::Literal);
     }
 
 
-    // Check for -> "("  additive-expr  ")"
+    // Check for -> "("  additive-expr  ")" alternative
 
     // Check for '('
-    n = parseSeparator(SeparatorType::OpenPar, false);
-
-    if(n) {
+    if((n = parseSeparator(SeparatorType::OpenPar, false))) {
 
          // Push "(" to the child nodes
         nodes.push_back(move(n));
@@ -160,6 +164,7 @@ unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
         if (!(n = parseAdditiveExpr(true)))
             return nullptr;
 
+        // Push the additive expression to the child nodes
        nodes.push_back(move(n));
 
         // Check for ")"
@@ -169,6 +174,7 @@ unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
             size_t range = manager.getabsolutePosition(n->location) + 1 - manager.getabsolutePosition(nodes.front()->location);
             SourceCodeReference ref{nodes.front()->location, range};
 
+            // Push the ')' to the child nodes
             nodes.push_back(move(n));
 
             return make_unique<PrimaryExprNode>(ref, move(nodes), PrimaryExprNode::SubType::AdditiveExpr);
@@ -197,19 +203,19 @@ unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr(bool mandatory) {
     // Vector for child nodes
     vector<unique_ptr<ParseTreeNode>> nodes{};
 
-
     unique_ptr<ParseTreeNode> n;
 
     // Parse multiplicative expression
     if (!(n = parseMultExpr(mandatory)))
         return nullptr;
 
+    // Push multiplicative expression to the child nodes
     nodes.push_back(move(n));
 
     // Check or optional (+|-) add-expr
     if ((n = parseArithmeticOperator(ArithmeticType::Plus)) || (n = parseArithmeticOperator(ArithmeticType::Minus))) {
 
-        // push the '+' or '-' to the child vector
+        // push the '+' or '-' to the child nodes
         nodes.push_back(move(n));
 
         // parse the following mandatory additive expression
@@ -223,6 +229,7 @@ unique_ptr<AdditiveExprNode> Parser::parseAdditiveExpr(bool mandatory) {
         subtype = AdditiveExprNode::SubType::Binary;
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -263,6 +270,7 @@ unique_ptr<MultExprNode> Parser::parseMultExpr(bool mandatory) {
 
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -299,6 +307,7 @@ unique_ptr<UnaryExprNode> Parser::parseUnaryExpr(bool mandatory) {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -330,6 +339,7 @@ unique_ptr<AssignExprNode> Parser::parseAssignExpr(bool mandatory) {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -368,6 +378,7 @@ unique_ptr<Statement> Parser::parseStatement() {
         nodes.push_back(move(n));
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -398,6 +409,7 @@ unique_ptr<StatementList> Parser::parseStatementList() {
         nodes.push_back(move(n));
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -430,6 +442,7 @@ unique_ptr<CompoundStatement> Parser::parseCompoundStatement() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -465,6 +478,7 @@ unique_ptr<InitDeclNode> Parser::parseInitDecl() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -496,6 +510,7 @@ unique_ptr<InitDeclListNode> Parser::parseInitDeclList() {
         nodes.push_back(move(n));
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -526,6 +541,7 @@ unique_ptr<DeclListNode> Parser::parseDeclList() {
         nodes.push_back(move(n));
     }
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -562,6 +578,7 @@ optional<unique_ptr<ParamDeclNode>> Parser::parseParamDecl() {
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     return make_unique<ParamDeclNode>(ref, move(nodes));
 }
 
@@ -591,6 +608,7 @@ optional<unique_ptr<VarDeclNode>> Parser::parseVarDecl() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -623,6 +641,7 @@ optional<unique_ptr<ConstDeclNode>> Parser::parseConstDecl() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
@@ -678,6 +697,7 @@ unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 

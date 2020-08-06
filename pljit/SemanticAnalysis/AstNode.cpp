@@ -10,12 +10,12 @@ std::optional<int64_t> AstLiteral::evaluate(EvalInstance&) {
     return value;
 }
 
-std::optional<int64_t> AstIdentifier::evaluate(EvalInstance& instance) {
+optional<int64_t> AstIdentifier::evaluate(EvalInstance& instance) {
 
     return instance.getValue(index);
 }
 
-std::optional<int64_t> AstBinaryArithmeticExpression::evaluate(EvalInstance& instance) {
+optional<int64_t> AstBinaryArithmeticExpression::evaluate(EvalInstance& instance) {
 
     auto leftvalue = lhs->evaluate(instance);
     auto rightvalue = rhs->evaluate(instance);
@@ -43,7 +43,7 @@ std::optional<int64_t> AstBinaryArithmeticExpression::evaluate(EvalInstance& ins
     }
 
 }
-std::optional<int64_t> AstUnaryArithmeticExpression::evaluate(EvalInstance& instance) {
+optional<int64_t> AstUnaryArithmeticExpression::evaluate(EvalInstance& instance) {
 
     auto subvalue = subexpr->evaluate(instance);
 
@@ -53,26 +53,26 @@ std::optional<int64_t> AstUnaryArithmeticExpression::evaluate(EvalInstance& inst
     return -subvalue.value();
 }
 
-std::optional<int64_t> AstAssignment::evaluate(EvalInstance& instance) {
+optional<int64_t> AstAssignment::evaluate(EvalInstance& instance) {
 
     auto value = rhs->evaluate(instance);
 
     if (!value)
         return nullopt;
 
-    instance.setValue(lhs->index, value.value());
+    instance.setValue(static_cast<AstIdentifier&>(*lhs).index, value.value());
 
     return value;
 
 }
-std::optional<int64_t> AstReturn::evaluate(EvalInstance& instance) {
+optional<int64_t> AstReturn::evaluate(EvalInstance& instance) {
 
     auto result = returnvalue->evaluate(instance);
 
     return result;
 }
 
-std::optional<int64_t> AstStatementList::evaluate(EvalInstance& instance) {
+optional<int64_t> AstStatementList::evaluate(EvalInstance& instance) {
 
     for (auto& st : statements) {
 
@@ -85,7 +85,7 @@ std::optional<int64_t> AstStatementList::evaluate(EvalInstance& instance) {
     return nullopt;
 }
 
-std::optional<int64_t> AstFunction::evaluate(EvalInstance& instance) {
+optional<int64_t> AstFunction::evaluate(EvalInstance& instance) {
 
     return statementlist->evaluate(instance);
 }

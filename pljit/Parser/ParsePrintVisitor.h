@@ -17,7 +17,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     ParsePrintVisitor(std::string filename, const SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
     // printTree            Prints the parse tree defined by the given node a root
-    void printTree(ParseTreeNode& root);
+    void printTree(const ParseTreeNode& root);
 
     // The visit methods for the visitor pattern
     void visit(const IdentifierNode& node) override ;
@@ -39,13 +39,12 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     void visit(const InitDeclListNode& node) override;
     void visit(const FuncDeclNode& node) override;
 
-
     private:
 
     size_t index{0};                    // Index used for numbering the nodes
     std::ofstream of{};                 // The output stream to write with
-    std::string filename{};             // The name of the output file
-    const SourceCodeManager& manager;         // The corresponding SourceCodeManager
+    const std::string filename{};       // The name of the output file
+    const SourceCodeManager& manager;   // The corresponding SourceCodeManager
     std::vector<size_t> indexstack{};   // Stack that is used for a correct indexing of the nodes
 
     // Helper methods

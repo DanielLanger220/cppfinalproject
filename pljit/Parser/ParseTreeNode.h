@@ -61,20 +61,20 @@ class NonTerminalTreeNode : public ParseTreeNode {
     std::vector<std::unique_ptr<ParseTreeNode>> nodes{};
 };
 
-//
+
+// Class to represent identifier nodes
 class IdentifierNode : public ParseTreeNode {
 
     public:
 
     // Constructor
-    explicit IdentifierNode(SourceCodeReference location, size_t index) : ParseTreeNode{location, ParseTreeNode::Type::Identifier}, index{index} {}
+    explicit IdentifierNode(SourceCodeReference location) : ParseTreeNode{location, ParseTreeNode::Type::Identifier} {}
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
-
-    const size_t index;         // the index that was assigned to this identifier during the lexical analysis
 };
 
+// Class to represent literal nodes
 class LiteralNode : public ParseTreeNode {
 
     public:
@@ -89,6 +89,7 @@ class LiteralNode : public ParseTreeNode {
 
 };
 
+// Class to represent generic nodes, i.e. arithmetic operators, separators and keywords
 class GenericTerminalNode : public ParseTreeNode {
 
     public:
@@ -110,7 +111,7 @@ class GenericTerminalNode : public ParseTreeNode {
     const SubType subtype;
 };
 
-
+// Class to represent primary expression nodes
 class PrimaryExprNode : public NonTerminalTreeNode {
 
     public:
@@ -131,7 +132,7 @@ class PrimaryExprNode : public NonTerminalTreeNode {
     const SubType subtype;          // Indicates the subtype of the Primary Expression
 };
 
-
+// Class to represent unary arithmetic expression nodes
 class UnaryExprNode : public NonTerminalTreeNode {
 
     public:
@@ -152,6 +153,7 @@ class UnaryExprNode : public NonTerminalTreeNode {
 
 };
 
+// Class to represent multiplicative expression nodes
 class MultExprNode : public NonTerminalTreeNode {
 
     public:
@@ -169,10 +171,9 @@ class MultExprNode : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
     const SubType subtype;          // Indicates the subtype of the Multiplicative Expression
-
 };
 
-
+// Class to represent additive expression nodes
 class AdditiveExprNode : public NonTerminalTreeNode {
 
     public:
@@ -192,6 +193,7 @@ class AdditiveExprNode : public NonTerminalTreeNode {
     const SubType subtype;          // Indicates the subtype of the Additive Expression
 };
 
+// Class to represent assignment expression nodes
 class AssignExprNode : public NonTerminalTreeNode {
 
     public:
@@ -203,6 +205,7 @@ class AssignExprNode : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
+// Class to represent statement nodes
 class Statement : public NonTerminalTreeNode {
 
     public:
@@ -222,6 +225,7 @@ class Statement : public NonTerminalTreeNode {
     const SubType subtype;          // Indicates the subtype of the Statement
 };
 
+// Class to represent statement-list nodes
 class StatementList : public NonTerminalTreeNode {
 
     public:
@@ -233,6 +237,7 @@ class StatementList : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
+// Class to represent compound statement nodes
 class CompoundStatement : public NonTerminalTreeNode {
 
     public:
@@ -244,7 +249,7 @@ class CompoundStatement : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
-
+// Class to represent parameter-declaration nodes
 class ParamDeclNode : public NonTerminalTreeNode {
 
     public:
@@ -256,6 +261,7 @@ class ParamDeclNode : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
+// Class to represent variable-declaration nodes
 class VarDeclNode : public NonTerminalTreeNode {
 
     public:
@@ -266,10 +272,12 @@ class VarDeclNode : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
+// Class to represent constant-declaration nodes
 class ConstDeclNode : public NonTerminalTreeNode {
 
     public:
 
+    // Constructor
     ConstDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)} {}
 
     // accept               accept method for the visitor pattern
@@ -277,6 +285,7 @@ class ConstDeclNode : public NonTerminalTreeNode {
 
 };
 
+// Class to represent declaration-list nodes
 class DeclListNode : public NonTerminalTreeNode {
 
     public:
@@ -288,6 +297,7 @@ class DeclListNode : public NonTerminalTreeNode {
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 };
 
+// Class to represent init-declaration nodes
 class InitDeclNode : public NonTerminalTreeNode {
 
     public:
@@ -298,9 +308,9 @@ class InitDeclNode : public NonTerminalTreeNode {
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-
 };
 
+// Class to represent init-declaration-list nodes
 class InitDeclListNode : public NonTerminalTreeNode {
 
     public:
@@ -314,8 +324,7 @@ class InitDeclListNode : public NonTerminalTreeNode {
 };
 
 
-
-
+// Class to represent function-declaration nodes
 class FuncDeclNode : public NonTerminalTreeNode {
 
     public:
@@ -323,23 +332,29 @@ class FuncDeclNode : public NonTerminalTreeNode {
     // Constructor
     FuncDeclNode(SourceCodeReference location, std::vector<std::unique_ptr<ParseTreeNode>> nodes, bool hasParam, bool hasVar, bool hasConst) : NonTerminalTreeNode{location, ParseTreeNode::Type::InitDecl, std::move(nodes)},
                                                                                                                                           hasParamDecl{hasParam}, hasVarDecl{hasVar}, hasConstDecl{hasConst}{}
+
+    // getParameterDeclarations                 Returns a pointer to the parameter-declaration node
     const ParamDeclNode* getParameterDeclarations() const;
+
+    // getVariableDeclarations                  Returns a pointer to the variable-declaration node
     const VarDeclNode* getVariableDeclarations() const;
+
+    // getConstantDeclarations                  Returns a pointer to the constant-declaration node
     const ConstDeclNode* getConstantDeclarations() const;
 
+    // getStatements                            Returns a pointer to the statement-list node
     const StatementList* getStatements() const;
 
     // accept               accept method for the visitor pattern
     void accept(ParseTreeVisitor& visitor) const override { visitor.visit(*this);}
 
-    const bool hasParamDecl{false};
-    const bool hasVarDecl{false};
-    const bool hasConstDecl{false};
-
-    private:
-
+    const bool hasParamDecl{false};         // Indicates, if the function has parameter declarations
+    const bool hasVarDecl{false};           // Indicates, if the function has variable declarations
+    const bool hasConstDecl{false};         // Indicates, if the function has constant declarations
 
 };
+
+
 } // namespace jit
 
 #endif //PLJIT_PARSETREENODE_H

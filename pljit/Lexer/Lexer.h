@@ -3,7 +3,6 @@
 
 #include <cctype>
 #include <memory>
-#include <map>
 
 #include "Token.h"
 #include "pljit/SourceCodeManager.h"
@@ -29,8 +28,6 @@ class Lexer {
     decltype(code.begin()) currAbsPos;  // An iterator, pointing to the current positon in the source code, where the lexer stands
 
     const SourceCodeManager& manager;   // A reference to the source code manager
-    std::map<std::string_view, size_t> nametable{};     // A map to create indices for the identifiers
-    size_t nofidentifiers{0};           // The number of differenct detected identifiers
 };
 
 } // namespace jit

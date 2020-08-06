@@ -12,21 +12,6 @@ void SymbolTable::insertEntry(size_t index, SourceCodeReference declaration, boo
     table.emplace_back(TableEntry{declaration, isConst, hasValue});
 }
 
-/*
-int64_t SymbolTable::getValue(size_t index) const {
-
-    assert(index < table.size());
-
-    return table[index].value;
-}*/
-/*
-void SymbolTable::setValue(size_t index, int64_t value) {
-
-    assert(index < table.size());
-
-    table[index].value = value;
-}*/
-
 bool SymbolTable::hasValue(size_t index) const {
 
     assert(index < table.size());

@@ -116,9 +116,15 @@ void ParsePrintVisitor::visit(const FuncDeclNode& node) {
     printNonTerminalNode("Function-Decl", node);
 }
 
-void ParsePrintVisitor::printTree(ParseTreeNode& root) {
+void ParsePrintVisitor::printTree(const ParseTreeNode& root) {
 
     of.open(filename);
+
+    if (!of.is_open()) {
+        cerr << "error: file " << filename << " could not be opened.\nPrinting of the parse tree aborted.\n";
+        return;
+    }
+
     index = 0;
 
     // Print header of .dot file

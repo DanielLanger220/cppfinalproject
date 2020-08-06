@@ -38,7 +38,7 @@ class SemanticAnalyser {
     // analyseIdentifier            Checks, if the identifier was declared.
     //                              If lhs is set to true, also checks if the identifier is a non-constant (the identifier appears on the left hand side of an assignment)
     //                              if lhs is set to false, also checks if the identifier has been initialised (the identifier appears in an arithmetic expression)
-    std::unique_ptr<AstIdentifier> analyseIdentifier(const IdentifierNode& id, bool lhs);
+    std::unique_ptr<AstArithmeticExpression> analyseIdentifier(const IdentifierNode& id, bool lhs);
 
     // analyseAssignment            Checks, if the expression on the right hand side is a valid expression and if the identifier on the left hand side is allowed to be assigned to.
     //                              Also updates the hasValue flag of this identifier in the symbol table.
@@ -59,7 +59,8 @@ class SemanticAnalyser {
     size_t nofparameters{0};
     size_t nofvariables{0};
 
-    std::vector<int64_t> constantTable{};       // Vector to store the values of constants during the semantical analysis
+    std::map<std::string_view, size_t> nametable{};     // A map to create indices for the identifiers
+    std::vector<int64_t> constantTable{};               // Vector to store the values of constants during the semantical analysis
 };
 
 } // namespace jit

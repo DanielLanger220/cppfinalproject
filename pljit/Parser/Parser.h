@@ -40,7 +40,7 @@ class Parser {
     std::unique_ptr<MultExprNode> parseMultExpr(bool mandatory = false);
     std::unique_ptr<AdditiveExprNode> parseAdditiveExpr(bool mandatory = false);
 
-    // parseAssignExpr          Parses an assignment expression with flag indicating whether the expression is mandatory or optional
+    // parseAssignExpr          Parses an assignment expression with a flag indicating whether the expression is mandatory or optional
     std::unique_ptr<AssignExprNode> parseAssignExpr(bool mandatory = false);
 
     // Parser methods to parse the statements and the compound statement
@@ -68,7 +68,6 @@ class Parser {
     std::unique_ptr<Token> nextToken() { return lookaheadToken ? std::move(lookaheadToken) : lex.nextToken();}
 
 };
-
 
 
 } // namespace jit

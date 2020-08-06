@@ -1,7 +1,6 @@
 #ifndef PLJIT_SOURCECODEMANAGER_H
 #define PLJIT_SOURCECODEMANAGER_H
 
-
 #include <string>
 #include <vector>
 #include <iostream>

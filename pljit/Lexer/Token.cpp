@@ -1,8 +1,10 @@
 #include "Token.h"
 
+using namespace std;
+
 namespace jit {
 
-std::string Keyword::toString(jit::Keyword::KeywordType t) {
+string Keyword::toString(jit::Keyword::KeywordType t) {
 
     switch(t) {
 
@@ -23,7 +25,7 @@ std::string Keyword::toString(jit::Keyword::KeywordType t) {
     }
 }
 
-std::string ArithmeticOperator::toString(ArithmeticOperator::ArithmeticType t) {
+string ArithmeticOperator::toString(ArithmeticOperator::ArithmeticType t) {
 
     switch(t) {
 
@@ -45,7 +47,7 @@ std::string ArithmeticOperator::toString(ArithmeticOperator::ArithmeticType t) {
 
 }
 
-std::string Separator::toString(Separator::SeparatorType t) {
+string Separator::toString(Separator::SeparatorType t) {
 
     switch(t) {
 
