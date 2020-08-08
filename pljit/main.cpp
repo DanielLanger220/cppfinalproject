@@ -6,10 +6,22 @@
 #include "Evaluation/EvalInstance.h"
 #include "Parser/Parser.h"
 
+#include <thread>
+
 //---------------------------------------------------------------------------
 using namespace std;
 using namespace jit;
 //---------------------------------------------------------------------------
+
+
+void run(Pljit::PljitHandle handle, int64_t a, int64_t b){
+
+    //if (a == 220)
+    //    this_thread::sleep_for(1s);
+    auto res = handle({a,b});
+    cout << "Resultat: " << res.value_or(220284) << endl;
+}
+
 int main() {
 
 
@@ -18,7 +30,6 @@ int main() {
         "VAR Steffi;\n\n\n"
         "CONST Jynx = 42, Melissa = 13;\n\n\n"
         "BEGIN\n"
-        "RETURN 1;\n"
         "Steffi := 2;\n"
         "Steffi := 13 + (3 * Steffi) - +(Jynx + Melissa * Sophie / Aubrey);\n"
         "Sophie:= Jynx * Sophie * 8 - 15 + 220;\n"
@@ -46,18 +57,28 @@ int main() {
 
     auto h1 = pl.registerFunction(code1);
 
-    auto h2 = pl.registerFunction(code2);
 
-    cout << "Das Ergebnis ist: " << h1({220, 284}).value_or(284) << endl;
-
-    cout << "Nächstes Ergebnis: " << h2({9,5}).value_or(220) << endl;
-
-    cout << "Nächstes Ergebnis: " << h1({9,5}).value_or(1) << endl;
+    thread t1(run, h1, 220, 284);
+    thread t2(run, h1, 13, 7);
+    thread t3(run, h1, 1, 2);
 
 
-    pl.printAst(h1, "/home/daniel/ast220.dot");
 
-    pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
+
+
+    //cout << "Das Ergebnis ist: " << h1({220, 284}).value_or(284) << endl;
+
+
+
+
+
+    t1.join();
+    t2.join();
+    t3.join();
+
+   // pl.printAst(h1, "/home/daniel/ast220.dot");
+
+    //pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
 
 
 

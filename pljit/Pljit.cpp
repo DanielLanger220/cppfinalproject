@@ -6,6 +6,9 @@
 #include "SemanticAnalysis/DeadCodeOpt.h"
 #include "SemanticAnalysis/ConstantPropOpt.h"
 #include "SemanticAnalysis/AstPrintVisitor.h"
+#include <thread>
+#include <chrono>
+#include <atomic>
 
 using namespace std;
 
@@ -16,6 +19,7 @@ Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
     PljitHandle handle{this, vecFunctions.size()};
 
     vecFunctions.emplace_back(HandleEntry{move(sourceCode)});
+    
 
     return handle;
 }
@@ -59,21 +63,51 @@ optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
 
     if (!handle) {
 
-        if (!jit->vecFunctions[index].function) {
+        if (jit->vecFunctions[index].compileStatus.load() != 2) {
             // Function has not been compiled yet
 
-            auto function = jit->compileFunction(index);
 
-            if (function)
-                jit->vecFunctions[index].function = move(function);
-            else {
-                jit->vecFunctions[index].function = nullptr;
-                handle = nullptr;
-                return nullopt;
+            unsigned char c{0};
+            bool b = jit->vecFunctions[index].compileStatus.compare_exchange_strong(c, 1);
+
+            /*if (args.front() == 220)
+                this_thread::sleep_for(5s);
+            else if (args.front() == 13)
+                this_thread::sleep_for(3s);
+            else
+                this_thread::sleep_for(1s);
+*/
+
+            if (b) { // CompileStatus was 0 (not compiled yet) and set to 1 (Compiling is in progress) ==> this thread has to compile the function
+
+                    cout << "Function gets compiled " << args.front() << endl;
+
+
+                    auto function = jit->compileFunction(index);
+
+                    if (function) {
+                        jit->vecFunctions[index].function = move(function);
+                        jit->vecFunctions[index].compileStatus.store(2);
+                    }
+                    else {
+                        jit->vecFunctions[index].function = nullptr;
+                        handle = nullptr;
+                        jit->vecFunctions[index].compileStatus.store(2);
+                        return nullopt;
+                    }
+
             }
+            else {  // Function is either currently compiled by another thread or compiling was finished in the meantime ==> wait until compileStatus is set to 2,
+                    // then read the function object
+
+
+                    while(jit->vecFunctions[index].compileStatus.load() != 2) {
+                    }
+
+                }
         }
 
-        handle = jit->vecFunctions[index].function->get();
+        handle = jit->vecFunctions[index].function.get();
     }
 
     if (!handle.value()) {
@@ -107,7 +141,7 @@ void Pljit::printAst(const Pljit::PljitHandle& h, const string& filename) {
     }
 
     AstPrintVisitor printer{filename, vecFunctions[h.index].manager};
-    printer.visit(*vecFunctions[h.index].function.value());
+    printer.visit(*vecFunctions[h.index].function);
 
 }
 

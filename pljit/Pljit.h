@@ -1,16 +1,19 @@
 #ifndef PLJIT_PLJIT_H
 #define PLJIT_PLJIT_H
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
-#include <memory>
+#include <atomic>
 
 #include "SourceCodeManager.h"
 
+#include "SemanticAnalysis/AstNode.h"
+
 namespace jit {
 
-class AstFunction;
+//class AstFunction;
 
 class Pljit {
 
@@ -53,17 +56,25 @@ class Pljit {
     private:
 
     struct HandleEntry {
+
         explicit HandleEntry(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}
+        HandleEntry(HandleEntry&& m) noexcept : sourceCode{std::move(m.sourceCode)},
+                                                manager{std::move(m.manager)},
+                                                function{std::move(m.function)},
+                                                compileStatus{m.compileStatus.load()} {}
+
         std::string sourceCode;
         SourceCodeManager manager;
-        std::optional<std::unique_ptr<AstFunction>> function{std::nullopt};
+        std::unique_ptr<AstFunction> function{nullptr};
+        std::atomic<unsigned char> compileStatus{0};
+
     };
 
     // compileFunction          Compiles the function corresponding to the source code at the given index and returns a pointer to an AstFunction object
     std::unique_ptr<AstFunction> compileFunction(size_t index);
 
-
     std::vector<HandleEntry> vecFunctions{};
+
 
 };
 

@@ -34,7 +34,7 @@ unique_ptr<Token> Lexer::nextToken() {
 
     // Check for literal
     if (isdigit(*currAbsPos)) {
-        int64_t value = strtol(currAbsPos, 0, 10);
+        int64_t value = strtol(currAbsPos, nullptr, 10);
 
         size_t n{0};
 
