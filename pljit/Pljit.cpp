@@ -6,9 +6,7 @@
 #include "SemanticAnalysis/DeadCodeOpt.h"
 #include "SemanticAnalysis/ConstantPropOpt.h"
 #include "SemanticAnalysis/AstPrintVisitor.h"
-#include <thread>
-#include <chrono>
-#include <atomic>
+
 
 using namespace std;
 
@@ -16,10 +14,14 @@ namespace jit {
 
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
-    PljitHandle handle{this, vecFunctions.size()};
 
-    vecFunctions.emplace_back(HandleEntry{move(sourceCode)});
-    
+    veclock.lock();
+
+    PljitHandle handle{this, vecFunctions.size()};
+    vecFunctions.emplace_back(FunctionEntry{move(sourceCode)});
+
+    veclock.unlock();
+
 
     return handle;
 }
@@ -61,63 +63,65 @@ unique_ptr<AstFunction> Pljit::compileFunction(size_t index) {
 
 optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
 
-    if (!handle) {
+    if (!functionptr) {     // Handle does not yet have a pointer to the function
 
-        if (jit->vecFunctions[index].compileStatus.load() != 2) {
-            // Function has not been compiled yet
+        if (jit->vecFunctions[index].compileStatus != 2) {  // Function has not been compiled yet
 
+            // Lock function vector
+            jit->veclock.lock();
 
-            unsigned char c{0};
-            bool b = jit->vecFunctions[index].compileStatus.compare_exchange_strong(c, 1);
+            // Indicates, if this thread will have to compile the function
+            bool compile{false};
 
-            /*if (args.front() == 220)
-                this_thread::sleep_for(5s);
-            else if (args.front() == 13)
-                this_thread::sleep_for(3s);
-            else
-                this_thread::sleep_for(1s);
-*/
+            if (jit->vecFunctions[index].compileStatus == 0) {
+                jit->vecFunctions[index].compileStatus = 1;
+                compile = true;
+            }
 
-            if (b) { // CompileStatus was 0 (not compiled yet) and set to 1 (Compiling is in progress) ==> this thread has to compile the function
+            // Unlock function vector
+            jit->veclock.unlock();
 
-                    cout << "Function gets compiled " << args.front() << endl;
-
+            if (compile) { // CompileStatus was 0 (not compiled yet) and set to 1 (Compiling is in progress) ==> this thread has to compile the function
 
                     auto function = jit->compileFunction(index);
 
+                    jit->veclock.lock();
+
                     if (function) {
                         jit->vecFunctions[index].function = move(function);
-                        jit->vecFunctions[index].compileStatus.store(2);
+                        jit->vecFunctions[index].compileStatus = 2;
                     }
                     else {
                         jit->vecFunctions[index].function = nullptr;
-                        handle = nullptr;
-                        jit->vecFunctions[index].compileStatus.store(2);
+                        functionptr = nullptr;
+                        jit->vecFunctions[index].compileStatus = 2;
                         return nullopt;
                     }
+
+                    jit->veclock.unlock();
 
             }
             else {  // Function is either currently compiled by another thread or compiling was finished in the meantime ==> wait until compileStatus is set to 2,
                     // then read the function object
 
-
-                    while(jit->vecFunctions[index].compileStatus.load() != 2) {
+                    while(jit->vecFunctions[index].compileStatus != 2) {
                     }
-
-                }
+            }
         }
 
-        handle = jit->vecFunctions[index].function.get();
+        // Update the function pointer in the handle (might also be nullptr if compiling of the function failed)
+        functionptr = jit->vecFunctions[index].function.get();
     }
 
-    if (!handle.value()) {
+    if (!functionptr.value()) {
 
         cerr << "error: function could not be compiled.\nCompilation aborted\n";
 
         return nullopt;
     }
 
-    EvalInstance evalInstance{*handle.value(), jit->vecFunctions[index].manager};
+    // Function is compiled and correct ==> run the function
+    EvalInstance evalInstance{*functionptr.value(), jit->vecFunctions[index].manager};
 
     return evalInstance.evaluate(move(args));
 }
@@ -130,12 +134,12 @@ void Pljit::printAst(const Pljit::PljitHandle& h, const string& filename) {
         return;
     }
 
-    if (!h.handle) {
+    if (!h.functionptr) {
         cerr << "error: Abstract syntax tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
 
-    if (h.handle.value() == nullptr) {
+    if (h.functionptr.value() == nullptr) {
         cerr << "error: Abstract syntax tree cannot be printed. Function could not be compiled\n";
         return;
     }
@@ -152,12 +156,12 @@ void Pljit::printParseTree(const Pljit::PljitHandle& h, const string& filename) 
         return;
     }
 
-    if (!h.handle) {
+    if (!h.functionptr) {
         cerr << "error: Parse tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
 
-    if (h.handle.value() == nullptr) {
+    if (h.functionptr.value() == nullptr) {
         cerr << "error: Parse tree cannot be printed. Function could not be compiled\n";
         return;
     }

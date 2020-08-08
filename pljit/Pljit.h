@@ -5,15 +5,14 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <atomic>
+#include <mutex>
 
 #include "SourceCodeManager.h"
-
-#include "SemanticAnalysis/AstNode.h"
+//#include "SemanticAnalysis/AstNode.h"
 
 namespace jit {
 
-//class AstFunction;
+class AstFunction;
 
 class Pljit {
 
@@ -25,14 +24,21 @@ class Pljit {
 
         public:
 
+        // Constructor
         explicit PljitHandle(Pljit* jit, size_t index) : index{index}, jit{jit} {};
+
+        // ()-operator              calls (and perhaps previously compiles) the function associated with the handle. The arguments to the function are given in a vector
         std::optional<int64_t> operator()(std::vector<int64_t> args);
 
         private:
 
-        std::optional<AstFunction*> handle{std::nullopt};
-        const size_t index;
-        Pljit* const jit;
+        // Pointer to the Ast-function object.
+        // nullopt ==> Function not yet compiled
+        // nullptr ==> Function has been compiled but an error occured
+        std::optional<AstFunction*> functionptr{std::nullopt};
+
+        const size_t index;         // Index of the associated function in the function vector
+        Pljit* const jit;           // Pointer to the associated Pljit object
     };
 
 
@@ -55,26 +61,23 @@ class Pljit {
 
     private:
 
-    struct HandleEntry {
+    struct FunctionEntry {
 
-        explicit HandleEntry(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}
-        HandleEntry(HandleEntry&& m) noexcept : sourceCode{std::move(m.sourceCode)},
-                                                manager{std::move(m.manager)},
-                                                function{std::move(m.function)},
-                                                compileStatus{m.compileStatus.load()} {}
+        // Constructor
+        explicit FunctionEntry(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}
 
-        std::string sourceCode;
-        SourceCodeManager manager;
-        std::unique_ptr<AstFunction> function{nullptr};
-        std::atomic<unsigned char> compileStatus{0};
-
+        std::string sourceCode;                         // Source code
+        SourceCodeManager manager;                      // Source Code Manager
+        unsigned char compileStatus{0};                 // 0 ==> not yet compiled   1 ==> function is currently compiled by a thread    2 ==> Compilation is finished
+        std::unique_ptr<AstFunction> function{nullptr}; // Pointer to the Ast-Function object
     };
 
     // compileFunction          Compiles the function corresponding to the source code at the given index and returns a pointer to an AstFunction object
     std::unique_ptr<AstFunction> compileFunction(size_t index);
 
-    std::vector<HandleEntry> vecFunctions{};
+    std::vector<FunctionEntry> vecFunctions{};        // Vector that stores the Function entries
 
+    std::mutex veclock{};       // Mutex to ensure thread-safe write access to the vector vecFunctions
 
 };
 
