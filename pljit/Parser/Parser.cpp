@@ -697,6 +697,12 @@ unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     nodes.push_back(move(n));
 
+    // Correct function was parsed, now check if end of file is reached.
+    if (!lex.checkForEndOfFile()) {
+        manager.printErrorMessage("error: unexpected tokens", lex.refToCurrentPosition());
+        return nullptr;
+    }
+
     // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};

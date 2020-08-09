@@ -46,6 +46,7 @@ void SourceCodeManager::printErrorMessage(const string& message, const SourceCod
     cerr << endl;
 }
 
+
 string_view SourceCodeManager::getString(const SourceCodeReference &loc) const {
 
     return string_view{code.data() + getabsolutePosition(loc), loc.range};

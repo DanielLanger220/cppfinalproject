@@ -6,6 +6,8 @@
 #include "Evaluation/EvalInstance.h"
 #include "Parser/Parser.h"
 
+
+#include <mutex>
 #include <thread>
 
 //---------------------------------------------------------------------------
@@ -37,7 +39,7 @@ int main() {
         "RETURN 220284;\n"
         "Steffi:= 3;\n"
         "RETURN Steffi\n"
-        "END.";
+        "END.\n\n\n\n\n";
 
 
         std::string code2 =
@@ -64,7 +66,9 @@ int main() {
 
 
 
+    std::mutex m{};
 
+    cout << sizeof(m) << endl;
 
     //cout << "Das Ergebnis ist: " << h1({220, 284}).value_or(284) << endl;
 
@@ -76,10 +80,13 @@ int main() {
     t2.join();
     t3.join();
 
-   // pl.printAst(h1, "/home/daniel/ast220.dot");
+    //this_thread::sleep_for(5s);
 
-    //pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
+    pl.printAst(h1, "/home/daniel/ast220.dot");
 
+    pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
+
+    string s1{"Daniel + Sophie!"};
 
 
 }

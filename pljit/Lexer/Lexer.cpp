@@ -12,20 +12,10 @@ using KeywordType = Keyword::KeywordType;
 
 unique_ptr<Token> Lexer::nextToken() {
 
-    // move lexer position to the beginning of the next token (i.e. skip all whitespaces)
-    while (isspace(*currAbsPos)) {
-        if (*currAbsPos == '\n') {
-            currPos = 1;
-            ++currLine;
-        } else
-            ++currPos;
-
-        ++currAbsPos;
-    }
-
-    if (currAbsPos == code.end())
+    // move lexer position to the beginning of the next token (i.e. skip all whitespaces) and check if end of file is reached
+    if (checkForEndOfFile())
     {
-        cerr << "error: end of file reached during parsing\nCompilation aborted\n";
+        cerr << "error: Unexpected end of file\n";
         return nullptr;
     }
 
@@ -147,6 +137,25 @@ unique_ptr<Token> Lexer::nextToken() {
     manager.printErrorMessage("Unrecognized Character", SourceCodeReference{currLine, currPos});
 
     return nullptr;
+}
+
+void Lexer::skipWhitespaces() {
+
+    while (currAbsPos != code.end() && isspace(*currAbsPos)) {
+        if (*currAbsPos == '\n') {
+            currPos = 1;
+            ++currLine;
+        } else
+            ++currPos;
+
+        ++currAbsPos;
+    }
+}
+bool Lexer::checkForEndOfFile() {
+
+    skipWhitespaces();
+
+    return (currAbsPos == code.end());
 }
 
 } // namespace jit

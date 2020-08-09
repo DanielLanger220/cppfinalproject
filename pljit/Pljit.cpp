@@ -7,6 +7,7 @@
 #include "SemanticAnalysis/ConstantPropOpt.h"
 #include "SemanticAnalysis/AstPrintVisitor.h"
 
+#include <thread>
 
 using namespace std;
 
@@ -15,22 +16,18 @@ namespace jit {
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
 
-    veclock.lock();
+    shared_ptr<FunctionObject> functionobj = make_shared<FunctionObject>(move(sourceCode));
 
-    PljitHandle handle{this, vecFunctions.size()};
-    vecFunctions.emplace_back(FunctionEntry{move(sourceCode)});
-
-    veclock.unlock();
-
+    PljitHandle handle{this, move(functionobj)};
 
     return handle;
 }
 
-unique_ptr<AstFunction> Pljit::compileFunction(size_t index) {
+unique_ptr<AstFunction> Pljit::compileFunction(FunctionObject& functionobj) {
 
     // Parse the sourcecode
 
-    Parser parser{vecFunctions[index].sourceCode, vecFunctions[index].manager};
+    Parser parser{functionobj.sourceCode, functionobj.manager};
 
     auto parsetree = parser.parseFunction();
 
@@ -39,7 +36,7 @@ unique_ptr<AstFunction> Pljit::compileFunction(size_t index) {
 
     // Do the semantical analysis
 
-    SemanticAnalyser seman{vecFunctions[index].manager, *parsetree};
+    SemanticAnalyser seman{functionobj.manager, *parsetree};
 
     if (!seman.createTable())
         return nullptr;
@@ -63,66 +60,41 @@ unique_ptr<AstFunction> Pljit::compileFunction(size_t index) {
 
 optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
 
-    if (!functionptr) {     // Handle does not yet have a pointer to the function
+    shared_lock sl{ptr->m};
 
-        if (jit->vecFunctions[index].compileStatus != 2) {  // Function has not been compiled yet
+    if (!ptr->compileStatus) {
 
-            // Lock function vector
-            jit->veclock.lock();
+        // Release read access and try to get exclusive access
+        sl.unlock();
+        unique_lock ul{ptr->m};
 
-            // Indicates, if this thread will have to compile the function
-            bool compile{false};
+        // If function is still not compiled, compile it
+        if (!ptr->compileStatus) {
 
-            if (jit->vecFunctions[index].compileStatus == 0) {
-                jit->vecFunctions[index].compileStatus = 1;
-                compile = true;
-            }
+            cout << "function gets compiled " << args.front() << endl;
 
-            // Unlock function vector
-            jit->veclock.unlock();
-
-            if (compile) { // CompileStatus was 0 (not compiled yet) and set to 1 (Compiling is in progress) ==> this thread has to compile the function
-
-                    auto function = jit->compileFunction(index);
-
-                    jit->veclock.lock();
-
-                    if (function) {
-                        jit->vecFunctions[index].function = move(function);
-                        jit->vecFunctions[index].compileStatus = 2;
-                    }
-                    else {
-                        jit->vecFunctions[index].function = nullptr;
-                        functionptr = nullptr;
-                        jit->vecFunctions[index].compileStatus = 2;
-                        return nullopt;
-                    }
-
-                    jit->veclock.unlock();
-
-            }
-            else {  // Function is either currently compiled by another thread or compiling was finished in the meantime ==> wait until compileStatus is set to 2,
-                    // then read the function object
-
-                    while(jit->vecFunctions[index].compileStatus != 2) {
-                    }
-            }
+            auto function = jit->compileFunction(*ptr);
+            ptr->function = move(function);
+            ptr->compileStatus = true;
         }
 
-        // Update the function pointer in the handle (might also be nullptr if compiling of the function failed)
-        functionptr = jit->vecFunctions[index].function.get();
+        // Release exclusive lock
+        ul.unlock();
     }
 
-    if (!functionptr.value()) {
 
-        cerr << "error: function could not be compiled.\nCompilation aborted\n";
+    // Get read access
+    if(!sl.owns_lock())
+        sl.lock();
 
+
+    if (!ptr->function) {
+
+        cerr << "error: Handle belongs to invalid source code\n";
         return nullopt;
     }
 
-    // Function is compiled and correct ==> run the function
-    EvalInstance evalInstance{*functionptr.value(), jit->vecFunctions[index].manager};
-
+    EvalInstance evalInstance{*ptr->function, ptr->manager};
     return evalInstance.evaluate(move(args));
 }
 
@@ -134,18 +106,18 @@ void Pljit::printAst(const Pljit::PljitHandle& h, const string& filename) {
         return;
     }
 
-    if (!h.functionptr) {
+    if (!h.ptr->compileStatus) {
         cerr << "error: Abstract syntax tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
 
-    if (h.functionptr.value() == nullptr) {
-        cerr << "error: Abstract syntax tree cannot be printed. Function could not be compiled\n";
+    if (h.ptr->function == nullptr) {
+        cerr << "error: Abstract syntax tree cannot be printed. Invalid source code.\n";
         return;
     }
 
-    AstPrintVisitor printer{filename, vecFunctions[h.index].manager};
-    printer.visit(*vecFunctions[h.index].function);
+    AstPrintVisitor printer{filename, h.ptr->manager};
+    printer.visit(*h.ptr->function);
 
 }
 
@@ -156,22 +128,22 @@ void Pljit::printParseTree(const Pljit::PljitHandle& h, const string& filename) 
         return;
     }
 
-    if (!h.functionptr) {
+    if (!h.ptr->compileStatus) {
         cerr << "error: Parse tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
 
-    if (h.functionptr.value() == nullptr) {
-        cerr << "error: Parse tree cannot be printed. Function could not be compiled\n";
+    if (h.ptr->function == nullptr) {
+        cerr << "error: Parse tree cannot be printed. Invalid source code.\n";
         return;
     }
 
-    Parser p{vecFunctions[h.index].sourceCode, vecFunctions[h.index].manager};
+    Parser p{h.ptr->sourceCode, h.ptr->manager};
     auto pt = p.parseFunction();
 
     assert(pt != nullptr);
 
-    ParsePrintVisitor printer{filename, vecFunctions[h.index].manager};
+    ParsePrintVisitor printer{filename, h.ptr->manager};
     printer.printTree(*pt);
 }
 
