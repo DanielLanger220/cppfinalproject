@@ -52,7 +52,7 @@ void AstPrintVisitor::visit(const AstUnaryArithmeticExpression& node) {
 
 void AstPrintVisitor::visit(const AstBinaryArithmeticExpression& node) {
 
-    char op;
+    char op{};
 
     switch(node.op) {
 

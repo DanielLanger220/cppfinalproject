@@ -23,31 +23,26 @@ class SymbolTable {
 
         SourceCodeReference declaration;    // Reference to the position in the source code
         bool isConst{false};                // Indicates whether the variable is constant
-        bool hasValue{false};               // Indicates whether the variable has a valid value
+        bool hasValue{false};               // Indicates whether the variable has a valid value (whether it is initialised)
     };
 
     // Constructor
     SymbolTable() = default;
 
-    // getValue         Returns the value from the given index
-    //int64_t getValue(size_t index) const;
-
-    /*// setValue         Sets the value for the given index
-    void setValue(size_t index, int64_t value);
-*/
     // hasValue         Returns whether the variable at the given index has a valid value
     bool hasValue(size_t index) const;
 
     // isConst          Returns whether the variable at the given index is a constant
     bool isConst(size_t index) const;
 
-    //private:
 
-    void insertEntry(size_t index, SourceCodeReference declaration, bool isConst, bool hasValue);
+    private:
 
-    std::vector<TableEntry> table{};
+    // insertEntry      Inserts an object of type TableEntry constructed with the given values at the end of the symbol table
+    void insertEntry(SourceCodeReference declaration, bool isConst, bool hasValue);
 
-    std::vector<int64_t> constants{};
+    std::vector<TableEntry> table{};        // The internal representation of the symbol table
+    std::vector<int64_t> constants{};       // Stores the values for the constants
 };
 
 } // namespace jit

@@ -20,7 +20,6 @@ class ConstantPropOpt : public OptimisePass {
     // Constructor
     ConstantPropOpt() = default;
 
-
     // The visit methods to support the visitor pattern
     void visit(AstLiteral& node) override;
     void visit(AstIdentifier& node) override ;
@@ -33,12 +32,17 @@ class ConstantPropOpt : public OptimisePass {
 
     private:
 
+    // Maps an AstNode (its address) to an optional<int64_t> value.
+    // nullopt        ==> The AstNode is currently marked as non-constant
+    // int64_t value  ==> The AstNode is currently marked as constant with the specified integer value
     std::map<AstNode*, std::optional<int64_t>> exprmap{};
+
+    // For all identifiers (parameters and variables), if they are currently marked as constant,
+    // stores their current values in order of the index that was given to the identifiers during the sem. analysis
+    // [P1, P2, ... , V1, V2, ...]
     std::vector<std::optional<int64_t>> vartable{};
 
-
-    size_t varstart{};
-    bool firstRun{true};
+    bool firstRun{true};        // The optimisation is done in two runs over the nodes. This flag specifies for the visit methods, which run should be performed
 
 };
 

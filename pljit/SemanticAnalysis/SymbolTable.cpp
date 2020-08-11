@@ -5,9 +5,7 @@ using namespace std;
 
 namespace jit {
 
-void SymbolTable::insertEntry(size_t index, SourceCodeReference declaration, bool isConst, bool hasValue) {
-
-    assert(index == table.size());
+void SymbolTable::insertEntry(SourceCodeReference declaration, bool isConst, bool hasValue) {
 
     table.emplace_back(TableEntry{declaration, isConst, hasValue});
 }

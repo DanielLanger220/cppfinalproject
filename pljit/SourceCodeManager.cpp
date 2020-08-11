@@ -1,6 +1,5 @@
 #include "SourceCodeManager.h"
 
-
 using namespace std;
 
 namespace jit {

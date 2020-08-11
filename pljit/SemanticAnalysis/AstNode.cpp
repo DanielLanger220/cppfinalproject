@@ -33,7 +33,7 @@ optional<int64_t> AstBinaryArithmeticExpression::evaluate(EvalInstance& instance
             return leftvalue.value() * rightvalue.value();
         case ArithmeticOperation::Div:
             if (rightvalue == 0) {
-                instance.manager.printErrorMessage("error: Division by 0", rhs->location);
+                instance.printErrorMessage("error: Division by 0", rhs->location);
                 return nullopt;
             }
             else

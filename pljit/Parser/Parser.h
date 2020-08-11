@@ -18,6 +18,7 @@ class Parser {
     // parseFunction                Parses the source code and, if successfull, returns a pointer to the root node of the created parse tree
     std::unique_ptr<FuncDeclNode> parseFunction();
 
+
     private:
 
     const SourceCodeManager& manager;       // A reference to the source code manager

@@ -7,13 +7,14 @@ namespace jit {
 
 void ConstantPropOpt::visit(AstLiteral& node) {
 
+    // A literal node is always constant
     exprmap.insert(pair<AstNode*, int64_t>(&node, node.value));
 }
 
 void ConstantPropOpt::visit(AstIdentifier& node) {
 
-    // Check, if the identifier is a variable currently marked as constant
-    if (node.index >= varstart && vartable[node.index])
+    // Check, if the identifier is currently marked as constant. If so, mark the expression as constant
+    if (vartable[node.index])
         exprmap.insert(pair<AstNode*, int64_t>(&node, *vartable[node.index]));
 
 }
@@ -22,11 +23,12 @@ void ConstantPropOpt::visit(AstUnaryArithmeticExpression& node) {
 
     if(firstRun) {  // First run
 
+        // Optimise the subexpression
         node.subexpr->optimise(*this);
 
+        // Check if the subexpression is marked as constant. If so, mark this unary expression as constant as well
         auto it = exprmap.find(node.subexpr.get());
 
-        // Check if the subexpression is marked as constant. If so, mark this unary expression as constant as well
         if (it != exprmap.end())
             exprmap.insert(pair<AstNode*, int64_t>(&node, - it->second.value()));
     }
@@ -44,6 +46,7 @@ void ConstantPropOpt::visit(AstBinaryArithmeticExpression& node) {
 
     if (firstRun) { // First run
 
+        // Optimise the subexpressions
         node.lhs->optimise(*this);
         node.rhs->optimise(*this);
 
@@ -52,6 +55,7 @@ void ConstantPropOpt::visit(AstBinaryArithmeticExpression& node) {
 
         bool divbyzero{false};
 
+        // If both subexpression are constant then the expression is also constant
         if (itleft != exprmap.end() && itright != exprmap.end()) {
 
             int64_t leftres = itleft->second.value();
@@ -149,7 +153,7 @@ void ConstantPropOpt::visit(AstAssignment& node) {
             vartable[static_cast<AstIdentifier&>(*node.lhs).index] = nullopt;
 
     }
-    else {      // Second run
+    else { // Second run
 
         // Check if the expression on the right hand side can be merged into a literal node, otherwise descend into it
         auto it = exprmap.find(node.rhs.get());
@@ -177,8 +181,6 @@ void ConstantPropOpt::visit(AstFunction& node) {
 
     vartable = vector<optional<int64_t>>(node.nofidentifiers, nullopt);
     exprmap.clear();
-
-    varstart = node.nofparameters;
 
     // Do the first run over the nodes
     firstRun = true;

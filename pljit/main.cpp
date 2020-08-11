@@ -1,13 +1,7 @@
 #include <iostream>
 
 #include "Pljit.h"
-#include "SemanticAnalysis/AstPrintVisitor.h"
-#include "pljit/Parser/ParsePrintVisitor.h"
-#include "Evaluation/EvalInstance.h"
-#include "Parser/Parser.h"
 
-
-#include <mutex>
 #include <thread>
 
 //---------------------------------------------------------------------------
@@ -28,17 +22,18 @@ int main() {
 
 
         std::string code1 =
-        "PARAM Aubrey, Sophie;\n"
-        "VAR Steffi;\n\n\n"
-        "CONST Jynx = 42, Melissa = 13;\n\n\n"
+        "PARAM a, b;\n"
+        "VAR c;\n\n\n"
+        "CONST d = 42, e = 13;\n\n\n"
         "BEGIN\n"
-        "Steffi := 2;\n"
-        "Steffi := 13 + (3 * Steffi) - +(Jynx + Melissa * Sophie / Aubrey);\n"
-        "Sophie:= Jynx * Sophie * 8 - 15 + 220;\n"
-        "RETURN Steffi;\n"
+        "c := 2;\n"
+        "c := 13 + (3 * a) - +(b + (d * e) / a);\n"
+        "RETURN c;\n"
+        "a:= b * c * 8 - 15 + 220;\n"
+        "RETURN a;\n"
         "RETURN 220284;\n"
-        "Steffi:= 3;\n"
-        "RETURN Steffi\n"
+        "b:= 3;\n"
+        "RETURN a\n"
         "END.\n\n\n\n\n";
 
 
@@ -48,9 +43,10 @@ int main() {
             "VAR v;\n"
             "CONST c = 42, x = 3, d = 57;\n"
             "BEGIN\n"
-            "p := c + (-x) * d * q;\n"
-            "v := 220;\n\n\n\n\n\n"
-            "RETURN p * q + c\n"
+            "p := 220;\n"
+            "q := 1;\n"
+            "v :=  p + 284;\n\n\n\n\n\n"
+            "RETURN p * q + v\n"
             "END.";
 
 
@@ -66,13 +62,16 @@ int main() {
 
 
 
-    std::mutex m{};
 
-    cout << sizeof(m) << endl;
 
     //cout << "Das Ergebnis ist: " << h1({220, 284}).value_or(284) << endl;
 
 
+    auto h2 = pl.registerFunction(code2);
+
+    h2({1,2});
+
+    pl.printAst(h2, "/home/daniel/Ast.dot");
 
 
 
@@ -84,9 +83,7 @@ int main() {
 
     pl.printAst(h1, "/home/daniel/ast220.dot");
 
-    pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
-
-    string s1{"Daniel + Sophie!"};
+    //pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
 
 
 }

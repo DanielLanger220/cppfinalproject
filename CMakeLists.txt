@@ -15,6 +15,8 @@ include(EnableUndefinedSanitizer)
 include(clang-tidy)
 include(BundledGTest)
 
+find_package(Threads)
+
 add_custom_target(lint)
 
 add_subdirectory(pljit)

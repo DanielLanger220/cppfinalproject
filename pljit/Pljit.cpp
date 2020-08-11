@@ -15,7 +15,6 @@ namespace jit {
 
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
-
     shared_ptr<FunctionObject> functionobj = make_shared<FunctionObject>(move(sourceCode));
 
     PljitHandle handle{this, move(functionobj)};
@@ -23,7 +22,7 @@ Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
     return handle;
 }
 
-unique_ptr<AstFunction> Pljit::compileFunction(FunctionObject& functionobj) {
+unique_ptr<AstFunction> Pljit::compileFunction(const FunctionObject& functionobj) {
 
     // Parse the sourcecode
 
@@ -38,9 +37,6 @@ unique_ptr<AstFunction> Pljit::compileFunction(FunctionObject& functionobj) {
 
     SemanticAnalyser seman{functionobj.manager, *parsetree};
 
-    if (!seman.createTable())
-        return nullptr;
-
     auto function = seman.analyseFunction();
 
     if (!function)
@@ -54,46 +50,39 @@ unique_ptr<AstFunction> Pljit::compileFunction(FunctionObject& functionobj) {
     function->optimise(deadcodeopt);
     function->optimise(constpropop);
 
-
     return function;
 }
 
 optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
 
-    shared_lock sl{ptr->m};
+    // Check, if the function has not yet been compiled
+    if (ptr->compileStatus.load() == 0) {
 
-    if (!ptr->compileStatus) {
+        unsigned char c = 0;
+        bool b = ptr->compileStatus.compare_exchange_strong(c, 1);
 
-        // Release read access and try to get exclusive access
-        sl.unlock();
-        unique_lock ul{ptr->m};
-
-        // If function is still not compiled, compile it
-        if (!ptr->compileStatus) {
+        if (b) { // This thread successfully compare-and-swaped the compile-status-flag from 0 to 1 --> this thread has to compile the function
 
             cout << "function gets compiled " << args.front() << endl;
 
             auto function = jit->compileFunction(*ptr);
             ptr->function = move(function);
-            ptr->compileStatus = true;
+            ptr->compileStatus.store(2);        // Set the compile-status-flag to 2 to signal all other threads that the function is ready
         }
-
-        // Release exclusive lock
-        ul.unlock();
     }
 
+    // Wait until the compile-status flag gets set to 2 (exactly one thread will ensure that this definitely happens)
+    while(ptr->compileStatus.load() != 2) {
+    }
 
-    // Get read access
-    if(!sl.owns_lock())
-        sl.lock();
-
-
+    // If the pointer now still is a null-pointer this means an error occurred during compiling
     if (!ptr->function) {
 
         cerr << "error: Handle belongs to invalid source code\n";
         return nullopt;
     }
 
+    // Finally evaluate the function with the given arguments and return the result
     EvalInstance evalInstance{*ptr->function, ptr->manager};
     return evalInstance.evaluate(move(args));
 }
@@ -106,7 +95,7 @@ void Pljit::printAst(const Pljit::PljitHandle& h, const string& filename) {
         return;
     }
 
-    if (!h.ptr->compileStatus) {
+    if (h.ptr->compileStatus.load() != 2) {
         cerr << "error: Abstract syntax tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
@@ -128,7 +117,7 @@ void Pljit::printParseTree(const Pljit::PljitHandle& h, const string& filename) 
         return;
     }
 
-    if (!h.ptr->compileStatus) {
+    if (h.ptr->compileStatus.load() != 2) {
         cerr << "error: Parse tree cannot be printed. Function has not been compiled yet.\n";
         return;
     }
@@ -147,6 +136,8 @@ void Pljit::printParseTree(const Pljit::PljitHandle& h, const string& filename) 
     printer.printTree(*pt);
 }
 
+Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode}{
 
+}
 
 } // namespace jit

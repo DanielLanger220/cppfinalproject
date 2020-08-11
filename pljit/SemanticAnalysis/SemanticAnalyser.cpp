@@ -7,17 +7,6 @@ using namespace std;
 namespace jit{
 
 
-/* Note to the indices of the identifiers:
-     *
-     * During the lexical analysis each identifier was assigned an incrementing index (starting with 0) in the order of its first appearance in the source code.
-     * The structure of the grammar ensures that in a valid function all parameters, variables and constants appear before any undeclared identifier. So any undeclared identifier has
-     * a higher index than any valid parameter, variable or constant.
-     * Also, as in the following method 'createTable', the declared identifiers are processed in the same order as during the lexical analysis, it can easily be checked, if any identifier
-     * is declared multiple times by simple counting the number of declared identifiers and without a map structure.
-     *
-*/
-
-
 bool SemanticAnalyser::createTable() {
 
     table = SymbolTable{};
@@ -52,7 +41,7 @@ bool SemanticAnalyser::createTable() {
                 return false;
             }
 
-            table.insertEntry(nofidentifiers, identifier.location, false, true);
+            table.insertEntry(identifier.location, false, true);
 
             ++nofidentifiers;
         }
@@ -83,7 +72,7 @@ bool SemanticAnalyser::createTable() {
                 return false;
             }
 
-            table.insertEntry(nofidentifiers, identifier.location, false, false);
+            table.insertEntry(identifier.location, false, false);
 
             ++nofidentifiers;
             ++nofvariables;
@@ -116,7 +105,7 @@ bool SemanticAnalyser::createTable() {
                 return false;
             }
 
-            table.insertEntry(nofidentifiers, identifier.location, true, true);
+            table.insertEntry(identifier.location, true, true);
 
             // Add the constant to the vector of constants
             constantTable.push_back(literal.value);
@@ -162,7 +151,6 @@ unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseIdentifier(const Id
 }
 
 unique_ptr<AstArithmeticExpression> SemanticAnalyser::analyseExpression(const ParseTreeNode& expression) {
-
 
     switch(expression.nodetype) {
 

@@ -5,9 +5,9 @@
 #include <optional>
 #include <string>
 #include <vector>
-#include <shared_mutex>
-#include "SourceCodeManager.h"
 #include <atomic>
+
+#include "SourceCodeManager.h"
 
 namespace jit {
 
@@ -62,17 +62,16 @@ class Pljit {
     struct FunctionObject {
 
         // Constructor
-        explicit FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode}  {}
+        explicit FunctionObject(std::string code);
 
-        std::string sourceCode;                         // Source code
-        SourceCodeManager manager;                      // Source Code Manager
-        bool compileStatus{false};
-        std::unique_ptr<AstFunction> function{nullptr}; // Pointer to the Ast-Function object
-        std::shared_mutex m{};
+        std::string sourceCode;                             // Source code
+        const SourceCodeManager manager;                    // Source Code Manager
+        std::atomic<unsigned char> compileStatus{0};        // 0 --> Function not yet compiled  1 --> Function currently gets compiled by one thread   2 --> Compiling finished
+        std::unique_ptr<AstFunction> function{nullptr};     // Pointer to the Ast-Function object
     };
 
     // compileFunction          Compiles the function corresponding to the source code of the function object and returns a pointer to an AstFunction object
-    std::unique_ptr<AstFunction> compileFunction(FunctionObject& functionobj);
+    static std::unique_ptr<AstFunction> compileFunction(const FunctionObject& functionobj);
 
 };
 

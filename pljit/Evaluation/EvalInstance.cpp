@@ -1,7 +1,5 @@
 #include "EvalInstance.h"
 
-#include "../SemanticAnalysis/AstNode.h"
-
 using namespace std;
 
 namespace jit {
@@ -25,7 +23,8 @@ optional<int64_t> EvalInstance::evaluate(std::vector<int64_t> parameters) {
     for(size_t i = function.nofparameters; i < function.nofparameters + function.nofvariables; ++i)
         identifiers[i] = 0;
 
-    // Execute the statements in order
+
+    // Execute the statements of the function in order
     for (auto& s : function.statementlist->statements)
     {
         auto result = s->evaluate(*this);
@@ -37,8 +36,13 @@ optional<int64_t> EvalInstance::evaluate(std::vector<int64_t> parameters) {
             return result;
     }
 
-
     return 0;
+}
+
+
+void EvalInstance::printErrorMessage(const std::string& msg, SourceCodeReference location) const {
+
+    manager.printErrorMessage(msg, location);
 }
 
 } // namespace jit
