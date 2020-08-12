@@ -188,8 +188,7 @@ unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
     else { // No primary expression could be parsed
 
         if (mandatory)
-            cout << "Test message!\n";
-          //  manager.printErrorMessage("Error: Unexpected Token", lookaheadToken->location);
+            manager.printErrorMessage("error: Unexpected Token", (lookaheadToken ? lookaheadToken->location : lex.refToCurrentPosition()));
 
         return nullptr;
     }
@@ -700,7 +699,7 @@ unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     // Correct function was parsed, now check if end of file is reached.
     if (!lex.checkForEndOfFile()) {
-        manager.printErrorMessage("error: unexpected tokens", lex.refToCurrentPosition());
+        manager.printErrorMessage("error: Unexpected Tokens", lex.refToCurrentPosition());
         return nullptr;
     }
 
