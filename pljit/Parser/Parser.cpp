@@ -187,8 +187,8 @@ unique_ptr<PrimaryExprNode> Parser::parsePrimaryExpr(bool mandatory) {
     }
     else { // No primary expression could be parsed
 
-        if (mandatory)
-            manager.printErrorMessage("Error: Unexpected Token", lookaheadToken->location);
+        //if (mandatory)
+          //  manager.printErrorMessage("Error: Unexpected Token", lookaheadToken->location);
 
         return nullptr;
     }
