@@ -7,7 +7,7 @@
 #include <vector>
 #include <atomic>
 
-#include "SourceCodeManager.h"
+#include "pljit/CodeManagement/SourceCodeManager.h"
 
 namespace jit {
 
@@ -34,7 +34,7 @@ class Pljit {
 
         private:
 
-        std::shared_ptr<FunctionObject> ptr;    // Pointer to the Ast-function object.
+        std::shared_ptr<FunctionObject> ptr;    // Pointer to the associated Function object.
 
         Pljit* const jit;                       // Pointer to the associated Pljit object
     };

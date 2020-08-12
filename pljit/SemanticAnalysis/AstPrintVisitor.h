@@ -4,9 +4,9 @@
 #include <string>
 #include <fstream>
 
-#include "AstVisitor.h"
 #include "AstNode.h"
-#include "../SourceCodeManager.h"
+#include "AstVisitor.h"
+#include "pljit/CodeManagement/SourceCodeManager.h"
 
 namespace jit {
 

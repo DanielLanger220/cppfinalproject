@@ -1,13 +1,14 @@
 #ifndef PLJIT_SOURCECODEMANAGER_H
 #define PLJIT_SOURCECODEMANAGER_H
 
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 namespace jit {
 
 
+// SourceCode Reference         Represents a reference into source code. Can be used in combination with SourceCodeManager objects
 struct SourceCodeReference {
 
     // Constructor              Initialises a Reference to a position in a source code string determined by line number, position within that line and the length (in characters) of
@@ -22,6 +23,7 @@ struct SourceCodeReference {
     const size_t range;         // The number of characters the reference covers starting with the position defined by the parameters 'line' and 'position'
 };
 
+// SourceCodeManager            Represents a string as as source code object
 class SourceCodeManager {
 
     public:

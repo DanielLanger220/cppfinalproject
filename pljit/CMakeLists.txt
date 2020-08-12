@@ -1,6 +1,6 @@
 set(PLJIT_SOURCES
         main.cpp
-        SourceCodeManager.cpp
+        CodeManagement/SourceCodeManager.cpp
         Lexer/Lexer.cpp
         Lexer/Token.cpp
         Pljit.cpp

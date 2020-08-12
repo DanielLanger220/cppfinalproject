@@ -7,8 +7,8 @@
 
 #include "AstVisitor.h"
 #include "OptimisePass.h"
+#include "pljit/CodeManagement/SourceCodeManager.h"
 #include "pljit/SemanticAnalysis/SymbolTable.h"
-#include "pljit/SourceCodeManager.h"
 
 namespace jit {
 

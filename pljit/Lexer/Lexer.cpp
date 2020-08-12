@@ -10,6 +10,7 @@ using SeparatorType = Separator::SeparatorType;
 using ArithmeticType = ArithmeticOperator::ArithmeticType;
 using KeywordType = Keyword::KeywordType;
 
+
 unique_ptr<Token> Lexer::nextToken() {
 
     // move lexer position to the beginning of the next token (i.e. skip all whitespaces) and check if end of file is reached
@@ -123,7 +124,7 @@ unique_ptr<Token> Lexer::nextToken() {
         ++currAbsPos;
         return res;
     } else if (*currAbsPos == ':') {
-        if (currAbsPos < code.end() && *(currAbsPos + 1) == '=') {
+        if (currAbsPos + 1 < code.end() && *(currAbsPos + 1) == '=') {
             res = make_unique<ArithmeticOperator>(SourceCodeReference(currLine, currPos, 2), ArithmeticType::VarAssign);
             currPos += 2;
             currAbsPos += 2;

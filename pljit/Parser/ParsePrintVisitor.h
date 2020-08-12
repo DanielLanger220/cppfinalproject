@@ -5,7 +5,7 @@
 
 #include "ParseTreeNode.h"
 #include "ParseTreeVisitor.h"
-#include "pljit/SourceCodeManager.h"
+#include "pljit/CodeManagement/SourceCodeManager.h"
 
 namespace jit {
 

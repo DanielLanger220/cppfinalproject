@@ -4,8 +4,8 @@
 #include <optional>
 #include <cassert>
 
+#include "pljit/CodeManagement/SourceCodeManager.h"
 #include "pljit/Parser/ParseTreeNode.h"
-#include "pljit/SourceCodeManager.h"
 
 namespace jit {
 

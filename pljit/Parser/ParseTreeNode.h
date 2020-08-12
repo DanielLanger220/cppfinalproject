@@ -5,8 +5,8 @@
 #include <vector>
 #include <optional>
 
+#include "pljit/CodeManagement/SourceCodeManager.h"
 #include "pljit/Parser/ParseTreeVisitor.h"
-#include "pljit/SourceCodeManager.h"
 
 namespace jit {
 

@@ -1,11 +1,16 @@
 
-#include "../SourceCodeManager.h"
+#include "pljit/CodeManagement/SourceCodeManager.h"
 
 #ifndef PLJIT_TOKEN_H
 #define PLJIT_TOKEN_H
 
 namespace jit {
 
+// Note: When I wrote this classes a few weeks ago, I decided to put the parentheses '(' and ')' into the category Separator, while they probably rather belong into the
+//       category ArithmeticOperator. Looking back, this was maybe not a good decision, but it does not do any harm, so it's hopefully acceptable.
+
+
+// Token                Base class for all Tokens
 class Token {
 
     public:
@@ -28,7 +33,7 @@ class Token {
     virtual ~Token() = default;
 };
 
-
+// Keyword              Token class that represents keywords of the PL
 class Keyword : public Token {
 
     public:
@@ -51,6 +56,7 @@ class Keyword : public Token {
     static std::string toString(KeywordType t);
 };
 
+// Identifier           Token class that represents identifiers of the PL
 class Identifier : public Token {
 
     public:
@@ -59,6 +65,7 @@ class Identifier : public Token {
     explicit Identifier(SourceCodeReference loc) : Token{loc, TokenType::Identifier} {}
 };
 
+// Literal              Token class that represents literal values (64-bit integers)
 class Literal : public Token {
 
     public:
@@ -69,6 +76,7 @@ class Literal : public Token {
     const int64_t value;            // Contains the integer value of the literal
 };
 
+// ArithmeticOperator   Token class that represents the operators +, -, *, /, = and :=
 class ArithmeticOperator : public Token {
 
     public:
@@ -91,6 +99,7 @@ class ArithmeticOperator : public Token {
     static std::string toString(ArithmeticType t);
 };
 
+// Separator            Token class that represents the separators ',', '.', ';', '(', ')'
 class Separator : public Token {
 
     public:
