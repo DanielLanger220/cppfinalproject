@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <optional>
-#include <string>
 #include <vector>
 #include <atomic>
 
@@ -13,6 +12,7 @@ namespace jit {
 
 class AstFunction;
 
+// Pljit                Creates handles for registered functions and manages the underlying data
 class Pljit {
 
     private:
@@ -20,6 +20,7 @@ class Pljit {
 
     public:
 
+    // PljitHandle      Represents a handle to a registered functions that can be used to call the execute the function
     class PljitHandle {
 
         friend class Pljit;
@@ -27,22 +28,23 @@ class Pljit {
         public:
 
         // Constructor
-        explicit PljitHandle(Pljit* jit, std::shared_ptr<FunctionObject> ptr) : ptr{std::move(ptr)}, jit{jit} {};
+        explicit PljitHandle(Pljit* jit, FunctionObject* ptr) : ptr{ptr}, jit{jit} {};
 
         // ()-operator              calls (and perhaps previously compiles) the function associated with the handle. The arguments to the function are given in a vector
         std::optional<int64_t> operator()(std::vector<int64_t> args);
 
         private:
 
-        std::shared_ptr<FunctionObject> ptr;    // Pointer to the associated Function object.
-
+        FunctionObject* const ptr;              // Pointer to the associated Function object.
         Pljit* const jit;                       // Pointer to the associated Pljit object
     };
 
 
     // Constructor
-    Pljit() = default;
+    Pljit();
 
+    // Destructor
+    ~Pljit();
 
     // registerFunction         registers the given source code and returns a handle to the function
     PljitHandle registerFunction(std::string sourceCode);
@@ -57,14 +59,16 @@ class Pljit {
     //                          As this method is not officially requested and rather for test purposes, I decided to do it that way
     void printParseTree(const PljitHandle& h, const std::string& filename);
 
+
     private:
 
+    // FunctionObject           Wraps all data (source code, source code manager, AstFunction object ...) for a registered function
     struct FunctionObject {
 
         // Constructor
         explicit FunctionObject(std::string code);
 
-        std::string sourceCode;                             // Source code
+        const std::string sourceCode;                             // Source code
         const SourceCodeManager manager;                    // Source Code Manager
         std::atomic<unsigned char> compileStatus{0};        // 0 --> Function not yet compiled  1 --> Function currently gets compiled by one thread   2 --> Compiling finished
         std::unique_ptr<AstFunction> function{nullptr};     // Pointer to the Ast-Function object
@@ -72,6 +76,8 @@ class Pljit {
 
     // compileFunction          Compiles the function corresponding to the source code of the function object and returns a pointer to an AstFunction object
     static std::unique_ptr<AstFunction> compileFunction(const FunctionObject& functionobj);
+
+    std::vector<std::unique_ptr<FunctionObject>> vecfunctions{};        // Stores the associated data (source code, source code manager ...) for the registered functions.
 
 };
 

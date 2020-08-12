@@ -28,6 +28,7 @@ int main() {
         "BEGIN\n"
         "c := 2;\n"
         "c := 13 + (3 * a) - +(b + (d * e) / a);\n"
+        //"RETURN (b + (d * e) / a);\n"
         "RETURN c;\n"
         "a:= b * c * 8 - 15 + 220;\n"
         "RETURN a;\n"
@@ -83,7 +84,7 @@ int main() {
 
     pl.printAst(h1, "/home/daniel/ast220.dot");
 
-    //pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
+    pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
 
 
 }

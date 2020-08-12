@@ -13,11 +13,25 @@ using namespace std;
 
 namespace jit {
 
+
+Pljit::Pljit() = default;
+
+Pljit::~Pljit() = default;
+
+Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode}{
+}
+
+
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
-    shared_ptr<FunctionObject> functionobj = make_shared<FunctionObject>(move(sourceCode));
+    if (sourceCode.back() != '\n')
+        sourceCode.push_back('\n');
 
-    PljitHandle handle{this, move(functionobj)};
+    unique_ptr<FunctionObject> functionobj = make_unique<FunctionObject>(move(sourceCode));
+
+    PljitHandle handle{this, functionobj.get()};
+
+    vecfunctions.emplace_back(move(functionobj));
 
     return handle;
 }
@@ -136,8 +150,6 @@ void Pljit::printParseTree(const Pljit::PljitHandle& h, const string& filename) 
     printer.printTree(*pt);
 }
 
-Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode}{
 
-}
 
 } // namespace jit
