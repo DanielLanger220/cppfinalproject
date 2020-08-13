@@ -11,7 +11,7 @@ namespace jit::Tester_Lexer {
 
 string code1 = "220:=abc+13   ;\nBEGIN\n\n:==:=PARAM/";
 string code2 = "456?123\n";
-string codeIncomplete1 = "123:a\n";
+string codeIncomplete1 = "123:abc\n";
 string codeIncomplete2 = "123:";
 string codeKeyword = "PARAM   BEGIN    VAR CONST RETURN END\n";
 string codeSeparator = ".,;()\n";
@@ -97,11 +97,14 @@ TEST(Lexer, TestIncompleteToken) {
     EXPECT_EQ(tk, nullptr);
 
 
-    manager = SourceCodeManager{codeIncomplete2};
-    Lexer lex2{codeIncomplete2, manager};
+    SourceCodeManager manager2{codeIncomplete2};
+    Lexer lex2{codeIncomplete2, manager2};
 
+    tk = lex2.nextToken();
+    EXPECT_EQ(tk->tokentype, Token::TokenType::Literal);
 
-
+    tk = lex2.nextToken();
+    EXPECT_EQ(tk, nullptr);
 }
 
 TEST(Lexer, TestErrorneousCharacter) {

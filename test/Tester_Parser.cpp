@@ -24,6 +24,7 @@ TEST(Parser, code1) {
     auto f = parser.parseFunction();
     ASSERT_NE(f, nullptr);
 
+
     EXPECT_EQ(f->nodes.size(), 3);
 
     ASSERT_EQ(f->nodes[1]->nodetype, ParseTreeNode::Type::CompundStatement);

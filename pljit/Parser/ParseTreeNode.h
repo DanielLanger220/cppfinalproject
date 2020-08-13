@@ -38,7 +38,7 @@ class ParseTreeNode {
     };
 
     // Constructor
-    ParseTreeNode(SourceCodeReference location, Type nodetype) : loc{location}, type{nodetype} {}
+    ParseTreeNode(SourceCodeReference location, Type nodetype) : location{location}, nodetype{nodetype} {}
 
     // Destructor
     virtual ~ParseTreeNode() = default;
@@ -46,14 +46,9 @@ class ParseTreeNode {
     // accept               accept method for the visitor pattern
     virtual void accept(ParseTreeVisitor& visitor) const = 0;
 
-    SourceCodeReference location() const {return loc;}
 
-    Type nodetype() const {return type;}
-
-    private:
-
-    SourceCodeReference loc;     // Reference to the location in source code
-    Type type;                    // Specifies the type of the parse tree node
+    const SourceCodeReference location;     // Reference to the location in source code
+    const Type nodetype;                    // Specifies the type of the parse tree node
 };
 
 // Base class for all non terminal nodes of the parse tree
