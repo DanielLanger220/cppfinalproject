@@ -5,6 +5,7 @@
 
 namespace jit {
 
+// DeadCodeOpt                          Performs a Dead-Code optimisation on an Ast
 class DeadCodeOpt : public OptimisePass {
 
     public:

@@ -12,6 +12,7 @@
 
 namespace jit {
 
+// ConstantPropOpt                      Performs a Constant-Propagation optimisation on an Ast
 class ConstantPropOpt : public OptimisePass {
 
 
@@ -47,4 +48,5 @@ class ConstantPropOpt : public OptimisePass {
 };
 
 } // namespace jit
+
 #endif //PLJIT_CONSTANTPROPOPT_H

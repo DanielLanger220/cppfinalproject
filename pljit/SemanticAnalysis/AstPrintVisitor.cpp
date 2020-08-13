@@ -7,11 +7,11 @@ namespace jit{
 void AstPrintVisitor::visit(const AstLiteral& node) {
 
     // Print the label with color
-    of << index << " [label=\"" << manager.getString(node.location) << "\", style = \"filled\", fillcolor = \"#8055bb\"]\n";
+    of << index << " [label=\"" << manager.getString(node.location) << "\", style = \"filled\", fillcolor = \"#89d18d\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     ++index;
 }
@@ -19,11 +19,11 @@ void AstPrintVisitor::visit(const AstLiteral& node) {
 void AstPrintVisitor::visit(const AstIdentifier& node) {
 
     // Print the label of the node
-    of << index << " [label=\"" << manager.getString(node.location) << "\"]\n";
+    of << index << " [label=\"" << manager.getString(node.location) << "\", style = \"filled\", fillcolor = \"#d0e279\"]\n";
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     ++index;
 
@@ -37,15 +37,15 @@ void AstPrintVisitor::visit(const AstUnaryArithmeticExpression& node) {
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     // Push the index of this node to the stack (as parent node for the direct child nodes)
-    indexstack.push_back(index++);
+    indexstack.push(index++);
 
     node.subexpr->accept(*this);
 
     // Remove the index of the current node from the stack
-    indexstack.pop_back();
+    indexstack.pop();
 
 }
 
@@ -77,16 +77,16 @@ void AstPrintVisitor::visit(const AstBinaryArithmeticExpression& node) {
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     // Push the index of this node to the stack (as parent node for the direct child nodes)
-    indexstack.push_back(index++);
+    indexstack.push(index++);
 
     node.lhs->accept(*this);
     node.rhs->accept(*this);
 
     // Remove the index of the current node from the stack
-    indexstack.pop_back();
+    indexstack.pop();
 
 
 }
@@ -99,15 +99,15 @@ void AstPrintVisitor::visit(const AstReturn& node) {
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     // Push the index of this node to the stack (as parent node for the direct child nodes)
-    indexstack.push_back(index++);
+    indexstack.push(index++);
 
     node.returnvalue->accept(*this);
 
     // Remove the index of the current node from the stack
-    indexstack.pop_back();
+    indexstack.pop();
 
 }
 
@@ -119,16 +119,16 @@ void AstPrintVisitor::visit(const AstAssignment& node) {
 
     // If the node has a parent node, print the edge from the parent node to this node
     if (!indexstack.empty())
-        of << indexstack.back() << " -> " << index << "\n";
+        of << indexstack.top() << " -> " << index << "\n";
 
     // Push the index of this node to the stack (as parent node for the direct child nodes)
-    indexstack.push_back(index++);
+    indexstack.push(index++);
 
     node.lhs->accept(*this);
     node.rhs->accept(*this);
 
     // Remove the index of the current node from the stack
-    indexstack.pop_back();
+    indexstack.pop();
 
 }
 
@@ -142,8 +142,10 @@ void AstPrintVisitor::visit(const AstFunction& node) {
 
     of.open(filename);
     index = 1;
-    indexstack.clear();
-    indexstack.push_back(0);
+
+    assert(indexstack.empty());
+
+    indexstack.push(0);
 
     // Print header of .dot file
     of << "digraph {\n\n";

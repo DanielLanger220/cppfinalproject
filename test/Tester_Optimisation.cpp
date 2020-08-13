@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "../pljit/Pljit.h"
 #include "../pljit/Parser/Parser.h"
-#include "../pljit/SemanticAnalysis/SemanticAnalyser.h"
-#include "../pljit/SemanticAnalysis/DeadCodeOpt.h"
 #include "../pljit/SemanticAnalysis/ConstantPropOpt.h"
+#include "../pljit/SemanticAnalysis/DeadCodeOpt.h"
+#include "../pljit/SemanticAnalysis/SemanticAnalyser.h"
+#include "pljit/Pljit/Pljit.h"
 
 using namespace std;
 using namespace jit;

@@ -8,6 +8,7 @@
 
 namespace jit {
 
+// SemanticAnalyser                     Performs the syntactical analysis on a parse tree and create an Ast
 class SemanticAnalyser {
 
     public:

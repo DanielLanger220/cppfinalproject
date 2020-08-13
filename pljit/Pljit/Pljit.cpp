@@ -1,11 +1,11 @@
-#include "Pljit.h"
-#include "Parser/Parser.h"
-#include "Parser/ParsePrintVisitor.h"
-#include "SemanticAnalysis/SemanticAnalyser.h"
-#include "Evaluation/EvalInstance.h"
-#include "SemanticAnalysis/DeadCodeOpt.h"
-#include "SemanticAnalysis/ConstantPropOpt.h"
-#include "SemanticAnalysis/AstPrintVisitor.h"
+#include "pljit/Pljit/Pljit.h"
+#include "pljit/Evaluation/EvalInstance.h"
+#include "pljit/Parser/ParsePrintVisitor.h"
+#include "pljit/Parser/Parser.h"
+#include "pljit/SemanticAnalysis/AstPrintVisitor.h"
+#include "pljit/SemanticAnalysis/ConstantPropOpt.h"
+#include "pljit/SemanticAnalysis/DeadCodeOpt.h"
+#include "pljit/SemanticAnalysis/SemanticAnalyser.h"
 
 #include <thread>
 
@@ -18,12 +18,13 @@ Pljit::Pljit() = default;
 
 Pljit::~Pljit() = default;
 
-Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode}{
-}
+Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode} {}
 
 
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
+    // If the source code does not end with a new-line character, one single new-line character is added at the end (this is just to print error messages
+    // referencing to the last line in a correct way
     if (sourceCode.back() != '\n')
         sourceCode.push_back('\n');
 
@@ -31,6 +32,7 @@ Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
 
     PljitHandle handle{this, functionobj.get()};
 
+    // Add the function object to the vector of registerd functions
     vecfunctions.emplace_back(move(functionobj));
 
     return handle;
@@ -89,7 +91,7 @@ optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
     while(ptr->compileStatus.load() != 2) {
     }
 
-    // If the pointer now still is a null-pointer this means an error occurred during compiling
+    // If the pointer now still is a null-pointer this means an error occurred during compilation
     if (!ptr->function) {
 
         cerr << "error: Handle belongs to invalid source code\n";

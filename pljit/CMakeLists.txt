@@ -1,9 +1,8 @@
 set(PLJIT_SOURCES
-        main.cpp
         CodeManagement/SourceCodeManager.cpp
         Lexer/Lexer.cpp
         Lexer/Token.cpp
-        Pljit.cpp
+        Pljit/Pljit.cpp
         Parser/ParseTreeNode.cpp
         Parser/Parser.cpp
         Parser/ParsePrintVisitor.cpp

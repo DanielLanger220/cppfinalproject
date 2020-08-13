@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "Pljit.h"
+#include "pljit/Pljit/Pljit.h"
 
 #include <thread>
 
@@ -85,6 +85,7 @@ int main() {
     pl.printAst(h1, "/home/daniel/ast220.dot");
 
     pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
+    pl.printParseTree(h2, "/home/daniel/parsetree284.dot");
 
 
 }

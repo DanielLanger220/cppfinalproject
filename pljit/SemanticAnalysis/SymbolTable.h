@@ -11,6 +11,7 @@ namespace jit {
 
 class SemanticAnalyser;
 
+// SymbolTable                          Represents a symbol table used during the semantic analysis to detect semantic errors in the source code
 class SymbolTable {
 
     public:

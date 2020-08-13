@@ -14,6 +14,7 @@ namespace jit {
 
 class EvalInstance;
 
+// AstNode                              Base class for all Abstract-Syntax-Tree nodes
 class AstNode {
 
     public:
@@ -46,6 +47,7 @@ class AstNode {
 };
 
 
+// AstArithmeticExpression              Base class for all nodes representing arithmetic expressions
 class AstArithmeticExpression : public AstNode {
 
     public:
@@ -64,6 +66,7 @@ class AstArithmeticExpression : public AstNode {
 
 };
 
+// AstLiteral                           Class representing literals in the Ast
 class AstLiteral : public AstArithmeticExpression {
 
     public:
@@ -84,6 +87,7 @@ class AstLiteral : public AstArithmeticExpression {
 
 };
 
+// AstIdentifier                        Class representing identifiers in the Ast
 class AstIdentifier : public AstArithmeticExpression {
 
     public:
@@ -103,7 +107,7 @@ class AstIdentifier : public AstArithmeticExpression {
     const size_t index{};           // Index of this Identifier in the symbol table
 };
 
-
+// AstBinaryArithmeticExpression        Class representing binary arithmetic expressions in the Ast
 class AstBinaryArithmeticExpression : public AstArithmeticExpression {
 
     public:
@@ -135,12 +139,12 @@ class AstBinaryArithmeticExpression : public AstArithmeticExpression {
 
 };
 
-
+// AstUnaryArithmeticExpressions        Class representing unary arithmetic expressions with a leading minus in the Ast
 class AstUnaryArithmeticExpression : public AstArithmeticExpression {
 
     /*
-     * Note: This Expression is always of the form 'expr = - subexpr', i.e. it is always a unary minus expression
-     * Unary plus expressions from the parse tree are removed away during the semantic analysis (during the analyse*** methods from the SemanticAnalyser object) as a unary plus
+     * Note: This expression is always of the form 'expr = - subexpr', i.e. it is always a unary minus expression
+     * Unary plus expressions from the parse tree are removed during the semantic analysis (during the analyse*** methods from the SemanticAnalyser object) as a unary plus
      * has no mathematical effect
      */
 
@@ -163,7 +167,7 @@ class AstUnaryArithmeticExpression : public AstArithmeticExpression {
 
 };
 
-
+// AstStatement                         Base class for statement nodes in the Ast, i.e. assignments and return-statements
 class AstStatement : public AstNode {
 
     public:
@@ -180,7 +184,7 @@ class AstStatement : public AstNode {
 
 };
 
-
+// AstAssignment                        Class representing an assignment node in the Ast
 class AstAssignment : public AstStatement {
 
     public:
@@ -204,6 +208,7 @@ class AstAssignment : public AstStatement {
 
 };
 
+// AstReturn                            Class representing a return-statement in the Ast
 class AstReturn : public AstStatement {
 
     public:
@@ -225,7 +230,7 @@ class AstReturn : public AstStatement {
     std::unique_ptr<AstArithmeticExpression> returnvalue{};         // The expression to be returned
 };
 
-
+// AstStatementList                     Class representing a statement-list (i.e. an ordered collection of statements) node in the Ast
 class AstStatementList : public AstNode {
 
     public:
@@ -246,7 +251,7 @@ class AstStatementList : public AstNode {
 
 };
 
-
+// AstFunction                          Class representing the root node of a complete Ast from a valid function
 class AstFunction : public AstNode {
 
     public:

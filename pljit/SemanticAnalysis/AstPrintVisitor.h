@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <stack>
 
 #include "AstNode.h"
 #include "AstVisitor.h"
@@ -10,6 +11,7 @@
 
 namespace jit {
 
+// AstPrintVisitor                      Prints an Abstract-Syntax-Tree in *.dot file format to a given file
 class AstPrintVisitor : public AstVisitor {
 
     public:
@@ -32,8 +34,8 @@ class AstPrintVisitor : public AstVisitor {
     size_t index{0};                    // Index used for numbering the nodes
     std::ofstream of{};                 // The output stream to write with
     std::string filename{};             // The name of the output file
-    const SourceCodeManager& manager;         // The corresponding SourceCodeManager
-    std::vector<size_t> indexstack{};   // Stack that is used for a correct indexing of the nodes
+    const SourceCodeManager& manager;   // The corresponding SourceCodeManager
+    std::stack<size_t> indexstack{};    // Stack that is used for a correct indexing of the nodes
 
 
     // Methods used to test the implementation, not necessary for the final functionality

@@ -575,10 +575,10 @@ optional<unique_ptr<ParamDeclNode>> Parser::parseParamDecl() {
 
     nodes.push_back(move(n));
 
+    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     size_t range = manager.getabsolutePosition(nodes.back()->location) + nodes.back()->location.range - manager.getabsolutePosition(nodes.front()->location);
     SourceCodeReference ref{nodes.front()->location, range};
 
-    // Determine the range ( resp. the length) of the node in the source code and create a source code reference
     return make_unique<ParamDeclNode>(ref, move(nodes));
 }
 
@@ -691,6 +691,7 @@ unique_ptr<FuncDeclNode> Parser::parseFunction() {
 
     nodes.push_back(move(compstatement));
 
+    // Check for the final '.'
     auto n = parseSeparator(SeparatorType::Dot, true);
     if (!n)
         return nullptr;

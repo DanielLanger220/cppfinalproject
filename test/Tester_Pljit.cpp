@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
-#include "../pljit/Pljit.h"
 #include "../pljit/SemanticAnalysis/AstNode.h"
+#include "gtest/gtest.h"
+#include "pljit/Pljit/Pljit.h"
 
 #include <thread>
 

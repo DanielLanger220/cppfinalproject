@@ -13,7 +13,7 @@ class AstAssignment;
 class AstStatementList;
 class AstFunction;
 
-
+// OptimisePass                         Base class for optimisations on an Ast
 class OptimisePass {
 
     public:

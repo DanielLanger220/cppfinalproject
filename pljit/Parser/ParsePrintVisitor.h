@@ -2,6 +2,7 @@
 #define PLJIT_PARSEPRINTVISITOR_H
 
 #include <fstream>
+#include <stack>
 
 #include "ParseTreeNode.h"
 #include "ParseTreeVisitor.h"
@@ -9,6 +10,7 @@
 
 namespace jit {
 
+// ParsePrintVisitor                    Prints a given parse tree in *.dot file format to a given file
 class ParsePrintVisitor : public ParseTreeVisitor {
 
     public:
@@ -17,7 +19,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     ParsePrintVisitor(std::string filename, const SourceCodeManager& manager) :  filename{move(filename)}, manager{manager}{}
 
     // printTree            Prints the parse tree defined by the given node a root
-    void printTree(const ParseTreeNode& root);
+    void printTree(const FuncDeclNode& root);
 
     // The visit methods for the visitor pattern
     void visit(const IdentifierNode& node) override ;
@@ -45,7 +47,7 @@ class ParsePrintVisitor : public ParseTreeVisitor {
     std::ofstream of{};                 // The output stream to write with
     const std::string filename{};       // The name of the output file
     const SourceCodeManager& manager;   // The corresponding SourceCodeManager
-    std::vector<size_t> indexstack{};   // Stack that is used for a correct indexing of the nodes
+    std::stack<size_t> indexstack{};    // Stack that is used for a correct indexing of the nodes
 
     // Helper methods
 

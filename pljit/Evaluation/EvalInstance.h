@@ -6,6 +6,7 @@
 
 namespace jit {
 
+// EvalInstance                         Class used to execute a function given by an Ast with given arguments
 class EvalInstance {
 
 

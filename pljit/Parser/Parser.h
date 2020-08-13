@@ -8,6 +8,7 @@
 
 namespace jit {
 
+// Parser                               Parses a given source code and create a parse tree
 class Parser {
 
     public:
@@ -72,4 +73,5 @@ class Parser {
 
 
 } // namespace jit
+
 #endif //PLJIT_PARSER_H

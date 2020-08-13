@@ -47,6 +47,7 @@ class ParseTreeVisitor {
     virtual void visit(const InitDeclNode& node) = 0;
     virtual void visit(const InitDeclListNode& node) = 0;
     virtual void visit(const FuncDeclNode& node) = 0;
+
 };
 
 } // namespace jit
