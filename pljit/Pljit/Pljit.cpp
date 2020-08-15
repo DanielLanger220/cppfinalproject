@@ -6,8 +6,8 @@
 #include "pljit/SemanticAnalysis/ConstantPropOpt.h"
 #include "pljit/SemanticAnalysis/DeadCodeOpt.h"
 #include "pljit/SemanticAnalysis/SemanticAnalyser.h"
+#include "pljit/Pljit/FunctionObject.h"
 
-#include <thread>
 
 using namespace std;
 
@@ -17,8 +17,6 @@ namespace jit {
 Pljit::Pljit() = default;
 
 Pljit::~Pljit() = default;
-
-Pljit::FunctionObject::FunctionObject(std::string code) : sourceCode(std::move(code)), manager{sourceCode} {}
 
 
 Pljit::PljitHandle Pljit::registerFunction(string sourceCode) {
@@ -78,8 +76,6 @@ optional<int64_t> Pljit::PljitHandle::operator()(vector<int64_t> args) {
         bool b = ptr->compileStatus.compare_exchange_strong(c, 1);
 
         if (b) { // This thread successfully compare-and-swaped the compile-status-flag from 0 to 1 --> this thread has to compile the function
-
-            cout << "function gets compiled " << args.front() << endl;
 
             auto function = jit->compileFunction(*ptr);
             ptr->function = move(function);

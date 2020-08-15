@@ -20,7 +20,7 @@ void run(Pljit::PljitHandle handle, int64_t a, int64_t b){
 
 int main() {
 
-
+/*
         std::string code1 =
         "PARAM a, b;\n"
         "VAR c;\n\n\n"
@@ -86,6 +86,28 @@ int main() {
 
     pl.printParseTree(h1, "/home/daniel/parsetree220.dot");
     pl.printParseTree(h2, "/home/daniel/parsetree284.dot");
+*/
+
+Pljit jit{};
+
+string code3 = "PARAM a, b;\n"
+               "VAR c;\n"
+               "CONST Sophie = 284;\n"
+               "BEGIN\n"
+               "c := a + - b;\n"
+               "RETURN c\n"
+               "END.";
+
+auto h1 = jit.registerFunction(code3);
+
+auto res = h1({220, 284});
+
+jit.printAst(h1, "/home/daniel/code3ast.dot");
+
+cout << "Ergebnis: " << res.value() << endl;
+
+
+
 
 
 }

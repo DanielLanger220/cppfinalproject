@@ -219,11 +219,11 @@ TEST(SemanticAnalysis, TestAst) {
     ASSERT_EQ(ae->subtype, AstArithmeticExpression::Subtype::Binary);
     EXPECT_EQ(static_cast<AstBinaryArithmeticExpression*>(ae)->op, AstBinaryArithmeticExpression::ArithmeticOperation::Mul);
 
-    // b
+        // b
     ae2 = static_cast<AstBinaryArithmeticExpression*>(ae)->lhs.get();
     EXPECT_EQ(ae2->subtype, AstArithmeticExpression::Subtype::Identifier);
 
-    // c
+        // c
     ae2 = static_cast<AstBinaryArithmeticExpression*>(ae)->rhs.get();
     EXPECT_EQ(ae2->subtype, AstArithmeticExpression::Subtype::Identifier);
 

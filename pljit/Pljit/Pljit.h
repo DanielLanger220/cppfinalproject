@@ -4,19 +4,15 @@
 #include <memory>
 #include <optional>
 #include <vector>
-#include <atomic>
 
-#include "pljit/CodeManagement/SourceCodeManager.h"
 
 namespace jit {
 
 class AstFunction;
+struct FunctionObject;
 
 // Pljit                Creates handles for registered functions and manages the underlying data
 class Pljit {
-
-    private:
-    struct FunctionObject;
 
     public:
 
@@ -62,17 +58,7 @@ class Pljit {
 
     private:
 
-    // FunctionObject           Wraps all data (source code, source code manager, AstFunction object ...) for a registered function
-    struct FunctionObject {
 
-        // Constructor
-        explicit FunctionObject(std::string code);
-
-        const std::string sourceCode;                             // Source code
-        const SourceCodeManager manager;                    // Source Code Manager
-        std::atomic<unsigned char> compileStatus{0};        // 0 --> Function not yet compiled  1 --> Function currently gets compiled by one thread   2 --> Compiling finished
-        std::unique_ptr<AstFunction> function{nullptr};     // Pointer to the Ast-Function object
-    };
 
     // compileFunction          Compiles the function corresponding to the source code of the function object and returns a pointer to an AstFunction object
     static std::unique_ptr<AstFunction> compileFunction(const FunctionObject& functionobj);

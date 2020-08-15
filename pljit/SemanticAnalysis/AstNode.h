@@ -144,7 +144,7 @@ class AstUnaryArithmeticExpression : public AstArithmeticExpression {
 
     /*
      * Note: This expression is always of the form 'expr = - subexpr', i.e. it is always a unary minus expression
-     * Unary plus expressions from the parse tree are removed during the semantic analysis (during the analyse*** methods from the SemanticAnalyser object) as a unary plus
+     * Unary plus expressions from the parse tree are left out (i.e. the plus sign) during the semantic analysis (during the analyse*** methods from the SemanticAnalyser object) as a unary plus
      * has no mathematical effect
      */
 

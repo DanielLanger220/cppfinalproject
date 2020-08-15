@@ -73,7 +73,6 @@ TEST(Pljit, test1) {
     Pljit jit{};
 
     auto h1 = jit.registerFunction(code1);
-    auto h2 = jit.registerFunction(code2);
 
     vector<thread> threads{};
     for(int i = 0; i < 100; ++i)
