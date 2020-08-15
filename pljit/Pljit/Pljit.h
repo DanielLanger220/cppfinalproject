@@ -58,8 +58,6 @@ class Pljit {
 
     private:
 
-
-
     // compileFunction          Compiles the function corresponding to the source code of the function object and returns a pointer to an AstFunction object
     static std::unique_ptr<AstFunction> compileFunction(const FunctionObject& functionobj);
 

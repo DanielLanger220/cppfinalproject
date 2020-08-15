@@ -13,7 +13,7 @@ void DeadCodeOpt::visit(AstStatementList& node) {
 
     ++it;
 
-    assert(it <= node.statements.end());
+    assert(it <= node.statements.end());    // Return statement must exist
 
     node.statements.erase(it, node.statements.end());
 }

@@ -33,31 +33,31 @@ void run1(Pljit::PljitHandle h, int64_t v) {
 
     optional<int64_t> result{};
 
-    for(int i = 0; i < 10; ++i) {
+    for(int i = 0; i < 100; ++i) {
         result = h({v, 2 * v});
     }
 
     EXPECT_EQ(result.value(), v - 4 * v + 3 *  3 * v * 220);
 }
 
-void run2(Pljit::PljitHandle h, int64_t v) {
+/*void run2(Pljit::PljitHandle h, int64_t v) {
 
     optional<int64_t> result{};
 
-    for(int i = 0; i < 10; ++i) {
+    for(int i = 0; i < 100; ++i) {
         result = h({v, 2 * v});
     }
 
     EXPECT_EQ(result.value(), v * v - 4 * v * v);
 
-}
+}*/
 
 void run(Pljit::PljitHandle h1, Pljit::PljitHandle h2, int64_t v) {
 
     optional<int64_t> result1{};
     optional<int64_t> result2{};
 
-    for(int i = 0; i < 10; ++i) {
+    for(int i = 0; i < 100; ++i) {
         result1 = h1({v, 2 * v});
         result2 = h2({v, -v});
     }
@@ -75,10 +75,10 @@ TEST(Pljit, test1) {
     auto h1 = jit.registerFunction(code1);
 
     vector<thread> threads{};
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 500; ++i)
         threads.emplace_back(thread{run1, h1, i});
 
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 500; ++i)
         threads[i].join();
 
 }
@@ -91,10 +91,10 @@ TEST(Pljit, test2) {
     auto h2 = jit.registerFunction(code2);
 
     vector<thread> threads{};
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 500; ++i)
         threads.emplace_back(thread{run, h1, h2, i});
 
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 500; ++i)
         threads[i].join();
 
 }

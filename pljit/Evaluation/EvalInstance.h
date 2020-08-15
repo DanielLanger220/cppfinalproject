@@ -19,7 +19,7 @@ class EvalInstance {
     //                      If an error occurs during execution (e.g. division-by-zero), returns nullopt, otherwise returns the result of the function
     std::optional<int64_t> evaluate(std::vector<int64_t> parameters);
 
-    // printErrorMessage    Prints a SourceCodeManager error message (this function is a wrapper and internally just calls the method from the internal SourceCodeManager object)
+    // printErrorMessage    Prints a SourceCodeManager error message (this method is just a wrapper and internally just calls the method from the internal SourceCodeManager object)
     void printErrorMessage(const std::string& msg, SourceCodeReference location) const;
 
     // getValue             Returns the value of the identifier at the given index
@@ -28,11 +28,16 @@ class EvalInstance {
     // setValue             Sets the value of the identifier at the given index to the given value
     void setValue(size_t index, int64_t value) {identifiers[index] = value;}
 
+    // result               Returns the result of the last evaluation this instance was used (same as the return value from the last evaulate(...) call)
+    std::optional<int64_t> result() const {return res;}
+
     private:
 
     const AstFunction& function;            // The associated AstFunction object
     const SourceCodeManager& manager;       // Reference to the associated SourceCode Manager
     std::vector<int64_t> identifiers{};     // Tracks the values of the identifiers during execution of the function
+
+    std::optional<int64_t> res{std::nullopt};        // Stores the result of an evaluation
 
 };
 

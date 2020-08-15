@@ -32,8 +32,10 @@ optional<int64_t> EvalInstance::evaluate(std::vector<int64_t> parameters) {
         if (!result)
             return nullopt;
 
-        if (s->subtype == AstStatement::SubType::AstReturn)
+        if (s->subtype == AstStatement::SubType::AstReturn) {
+            res = result;
             return result;
+        }
     }
 
     return 0;

@@ -70,7 +70,6 @@ TEST(ConstantPropagationOptimisation, Test1) {
     AstStatement* st = statements.statements[1].get();
     EXPECT_EQ(st->subtype, AstStatement::SubType::AstAssignment);
     AstArithmeticExpression* ae = static_cast<AstAssignment*>(st)->rhs.get();
-    cout << manager.getString(ae->location) << endl;
     EXPECT_EQ(ae->subtype, AstArithmeticExpression::Subtype::Literal);
 
     // RETURN (a - 2 * b) + 3 * c + d ==> Check, if '3 * c + d' has been merged into a single literal node
@@ -79,7 +78,6 @@ TEST(ConstantPropagationOptimisation, Test1) {
     ae = static_cast<AstReturn*>(st)->returnvalue.get();    // ae == '(a - 2 * b) + 3 * c + d' ==> Binary arithmetic expression
     ASSERT_EQ(ae->subtype, AstArithmeticExpression::Subtype::Binary);
     ae = static_cast<AstBinaryArithmeticExpression*>(ae)->rhs.get(); // ae == '3 * c + d' ==> Check, if this is a literal
-    cout << manager.getString(ae->location) << endl;
     EXPECT_EQ(ae->subtype, AstArithmeticExpression::Subtype::Literal);
 
 }
