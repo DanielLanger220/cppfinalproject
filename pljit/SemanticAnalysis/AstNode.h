@@ -278,8 +278,8 @@ class AstFunction : public AstNode {
 
     // The number of valid identifiers (parameters + variables), parameters and variables
     // CAUTION:
-    // In contrast to during the semantical analyisis, constants are not counted as identifiers in this final AstFunction object anymore as they have been removed
-    // and made to AstLiteral ndoes,  i.e. SemanticAnalyser.nofidentifiers != AstFunction.nofidentifiers
+    // In contrast to during the semantical analyisis, constants are not counted as identifiers in this final AstFunction object anymore as they have been turned
+    // into AstLiteral ndoes,  i.e. SemanticAnalyser.nofidentifiers != AstFunction.nofidentifiers
     const size_t nofidentifiers{};
     const size_t nofparameters{};
     const size_t nofvariables{};

@@ -12,7 +12,8 @@ set(PLJIT_SOURCES
         SemanticAnalysis/AstPrintVisitor.cpp
         Evaluation/EvalInstance.cpp
         SemanticAnalysis/DeadCodeOpt.cpp
-        SemanticAnalysis/ConstantPropOpt.cpp Pljit/FunctionObject.cpp Pljit/FunctionObject.h)
+        SemanticAnalysis/ConstantPropOpt.cpp
+        Pljit/FunctionObject.cpp)
 
 add_library(pljit_core ${PLJIT_SOURCES})
 target_include_directories(pljit_core PUBLIC ${CMAKE_SOURCE_DIR})

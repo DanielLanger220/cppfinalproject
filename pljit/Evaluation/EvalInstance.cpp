@@ -11,7 +11,7 @@ optional<int64_t> EvalInstance::evaluate(std::vector<int64_t> parameters) {
 
     if (function.nofparameters != parameters.size()) {
 
-        cerr << "error: " << parameters.size() << " parameters given, but function expects " << function.nofparameters << endl;
+        cerr << "error: " << parameters.size() << " parameter(s) given, but function expects " << function.nofparameters << endl;
         return nullopt;
     }
 
