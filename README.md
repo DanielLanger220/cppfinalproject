@@ -1,5 +1,5 @@
 # Systems Programming in C++ - Abschlussprojekt
-Bei dem im folgenden beschriebenen Programm handelt es sich um das Abschlussprojekt
+Bei dem im Folgenden beschriebenen Programm handelt es sich um das Abschlussprojekt
 zum Master-Praktikum „Systems Programming in C++“, das ich im letzten Sommer an der TU München absolviert
 habe. Das Praktikum war keine Teamarbeit, sämtliche Aufgaben wurden individuell
 bearbeitet.
@@ -50,7 +50,7 @@ der der Fehler auftritt und um was für einen Fehler es sich handelt (durch
 Einfügen eines Fehlers im Code der program Variablen kann man dies
 ausprobieren). Außerdem werden Optimierungen im Code vorgenommen.
 Zusätzlich kann man sich zu jedem registrierten Programm den dazugehörigen
-Parse-Tree und den Abstract-Syntax-Tree graphisch darstellen lassen.
+Parse-Tree und den Abstract-Syntax-Tree grafisch darstellen lassen.
 ```cpp
 jit.printParseTree(h, "PATH_TO_FIILE");
 ```
@@ -59,7 +59,7 @@ bzw.
 jit.printAST(h, "PATH_TO_FIILE");
 ```
 
-PATH_TO_FILE ersetzt man durch den gewünschen Namen der Datei. Die Bäume werden
+PATH_TO_FILE ersetzt man durch den gewünschten Namen der Ausgabedatei. Die Bäume werden
 im Dot-Format gespeichert und können unter Linux mit dem Programm xdot geöffnet
 werden. Die beiden Bäume des Beispielprogramms sind im Wurzelverzeichnis
 exemplarisch beigefügt (ast.dot und parsetree.dot).
