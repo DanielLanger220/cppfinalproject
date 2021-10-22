@@ -37,7 +37,7 @@ Pljit jit{};
 // gestartet werden kann
 auto h = jit.registerFunction(program);
 
-// program mit den Parametern 5 für a und 7 für b laufen lassen. Das Integer 
+// program mit den Parametern 5 für a und 7 für b ausgeführt. Das Integer 
 // Ergebnis wird in einer optional\<int\> Variable gekapselt zurückgegeben.
 auto res = h({5,7});
 </code></pre>
