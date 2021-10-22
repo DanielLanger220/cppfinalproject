@@ -1,8 +1,8 @@
-# cppfinalproject
+# Systems Programming in C++ - Abschlussprojekt
 Bei dem im folgenden beschriebenen Programm handelt es sich um das Abschlussprojekt
-zum Master-Praktikum „Systems Programming in C++“, das ich im letzten Sommer absolviert
+zum Master-Praktikum „Systems Programming in C++“, das ich im letzten Sommer an der TU München absolviert
 habe. Das Praktikum war keine Teamarbeit, sämtliche Aufgaben wurden individuell
-bearbeitet. Der Code ist komplett von mir geschrieben.
+bearbeitet.
 Das Programm ist ein Compiler und eine Laufzeitumgebung einer stark simplifizierten
 Programmiersprache. Mit dieser Programmiersprache kann man einzelne Funktionen
 definieren, die simple Berechnungen auf Integer Werten durchführt und am Ende einen
