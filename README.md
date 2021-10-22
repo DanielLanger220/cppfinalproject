@@ -21,7 +21,8 @@ Parameter braucht. Anschließend folgt die Berechnung, bestehend aus
 Zuweisungen und arithmetischen Ausdrücken. In Zeile 7 wird das Ergebnis der
 Berechnung zurückgegeben (dies ist der Wert, der weiter unten beim Aufruf der
 Funktion in der Variablen res gespeichert wird.  
-<pre><code>
+
+```cpp
 string program = "PARAM a, b;\n"
 "VAR c, d;\n"
 "CONST e = 220;\n"
@@ -40,7 +41,7 @@ auto h = jit.registerFunction(program);
 // program mit den Parametern 5 für a und 7 für b ausgeführt. Das Integer 
 // Ergebnis wird in einer optional\<int\> Variable gekapselt zurückgegeben.
 auto res = h({5,7});
-</code></pre>
+```
 
 Der Compiler erkennt sowohl Syntaxfehler (z.B. ein fehlendes ;) als auch
 semantische Fehler (z.B. die Verwendung einer nicht initialisierten Variablen
