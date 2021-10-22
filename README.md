@@ -10,7 +10,7 @@ Integer Wert zurückgibt. Die Syntax der Programmiersprache ist auf den Seiten 5
 final.pdf dargestellt. Innerhalb der main Methode in Pljit/main.cpp kann man Funktionen in
 Form von Strings in dieser Sprache formulieren. Diese kann man dann über das pljit Objekt
 registrieren. Wenn alles korrekt ist (keine Syntaxfehler, ...) kann man die Funktion
-anschließend laufen lassen.
+anschließend ausführen.
 <h3>Beispiel (aus main.cpp)</h3>
 In Zeile 1 werden zwei Parameter definiert, diese müssen bei jedem späteren
 Lauf der Funktion übergeben werden. In Zeile 2 werden zwei Variablen
