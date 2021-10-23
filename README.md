@@ -39,7 +39,7 @@ Pljit jit{};
 auto h = jit.registerFunction(program);
 
 // program mit den Parametern 5 für a und 7 für b ausführen. Das Integer 
-// Ergebnis wird in einer optional\<int\> Variable gekapselt zurückgegeben.
+// Ergebnis wird in einer optional<int> Variable gekapselt zurückgegeben.
 auto res = h({5,7});
 ```
 
