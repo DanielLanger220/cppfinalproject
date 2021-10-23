@@ -7,7 +7,7 @@ Das Programm ist ein Compiler und eine Laufzeitumgebung einer stark simplifizier
 Programmiersprache. Mit dieser Programmiersprache kann man einzelne Funktionen
 definieren, die simple Berechnungen auf Integer Werten durchführt und am Ende einen
 Integer Wert zurückgibt. Die Syntax der Programmiersprache ist auf den Seiten 5 bis 7 in
-final.pdf dargestellt. Innerhalb der main Methode in Pljit/main.cpp kann man Funktionen in
+final.pdf beschrieben. Innerhalb der main Methode in Pljit/main.cpp kann man Funktionen in
 Form von Strings in dieser Sprache formulieren. Diese kann man dann über das pljit Objekt
 registrieren. Wenn alles korrekt ist (keine Syntaxfehler, ...) kann man die Funktion
 anschließend ausführen.
@@ -38,7 +38,7 @@ Pljit jit{};
 // gestartet werden kann
 auto h = jit.registerFunction(program);
 
-// program mit den Parametern 5 für a und 7 für b ausgeführt. Das Integer 
+// program mit den Parametern 5 für a und 7 für b ausführen. Das Integer 
 // Ergebnis wird in einer optional\<int\> Variable gekapselt zurückgegeben.
 auto res = h({5,7});
 ```
